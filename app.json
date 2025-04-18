@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "CalFit",
-    "slug": "calfit",
+    "slug": "CalFit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,8 +29,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router",
-      "expo-dev-client"
+      "expo-router"
     ],
     "scheme": "calfit",
     "extra": {
@@ -44,6 +43,7 @@
     "owner": "atharvapatil",
     "runtimeVersion": {
       "policy": "appVersion"
-    }
+    },
+    "newArchEnabled": true
   }
 }

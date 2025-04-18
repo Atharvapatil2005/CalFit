@@ -1,52 +1,85 @@
-import React, { useEffect, useState } from 'react';
-import { Slot, useRouter, useSegments } from 'expo-router';
-import { PaperProvider } from 'react-native-paper';
-import { getCurrentUser } from '../src/services/supabase';
-import { AuthState } from '../src/types/auth';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Stack } from 'expo-router';
+import { PaperProvider, Text } from 'react-native-paper';
+import { theme } from '../src/constants/theme';
+import * as SplashScreen from 'expo-splash-screen';
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    session: null,
-    loading: true,
-  });
-  const segments = useSegments();
-  const router = useRouter();
+  const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
-    checkUser();
+    async function prepare() {
+      try {
+        // Add any initialization logic here
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Show splash for 2 seconds
+      } catch (e) {
+        console.warn('Initialization error:', e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+
+    prepare();
   }, []);
 
-  useEffect(() => {
-    const inAuthGroup = segments[0] === '(auth)';
-    
-    if (!authState.loading && !authState.user && !inAuthGroup) {
-      router.replace('/login');
-    } else if (!authState.loading && authState.user && inAuthGroup) {
-      router.replace('/(tabs)');
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      await SplashScreen.hideAsync();
     }
-  }, [authState.user, authState.loading, segments]);
+  }, [appIsReady]);
 
-  const checkUser = async () => {
-    try {
-      const user = await getCurrentUser();
-      setAuthState({
-        user,
-        session: null,
-        loading: false,
-      });
-    } catch (error) {
-      setAuthState({
-        user: null,
-        session: null,
-        loading: false,
-      });
-    }
-  };
+  if (!appIsReady) {
+    return (
+      <View style={styles.container}>
+        <Text variant="displayLarge" style={styles.title}>CalFit</Text>
+        <Text variant="titleLarge" style={styles.subtitle}>Your AI-powered calorie tracker</Text>
+      </View>
+    );
+  }
 
   return (
-    <PaperProvider>
-      <Slot />
+    <PaperProvider theme={theme}>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <Stack>
+          <Stack.Screen 
+            name="index"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="(auth)" 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="(tabs)" 
+            options={{ headerShown: false }}
+          />
+        </Stack>
+      </View>
     </PaperProvider>
   );
-} 
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  title: {
+    color: 'white',
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: 'white',
+    opacity: 0.9,
+    textAlign: 'center',
+  },
+}); 

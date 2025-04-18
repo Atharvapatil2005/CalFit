@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, IconButton, Surface } from 'react-native-paper';
-import { useTheme } from 'react-native-paper';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { Text, TextInput, IconButton, Surface, useTheme } from 'react-native-paper';
+import { sendMessage } from '../../src/services/aiService';
 
 type Message = {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  error?: boolean;
 };
 
 export default function ChatScreen() {
@@ -21,9 +22,19 @@ export default function ChatScreen() {
       timestamp: new Date(),
     },
   ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  };
 
   const handleSend = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -34,18 +45,34 @@ export default function ChatScreen() {
 
     setMessages((prev) => [...prev, userMessage]);
     setMessage('');
+    setIsLoading(true);
 
-    // TODO: Integrate with AI service
-    // Mock AI response
-    setTimeout(() => {
+    try {
+      const aiResponse = await sendMessage([
+        { role: 'user', content: message },
+      ]);
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I'm processing your request...",
+        text: aiResponse,
         isUser: false,
         timestamp: new Date(),
       };
+
       setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+    } catch (error) {
+      console.error('Chat Error:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "I'm having trouble connecting to the AI service. Please check your internet connection and try again. If the problem persists, you may need to verify your API key.",
+        isUser: false,
+        timestamp: new Date(),
+        error: true,
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,37 +81,74 @@ export default function ChatScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={100}
     >
-      <ScrollView style={styles.messagesContainer}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.messagesContent}
+      >
         {messages.map((msg) => (
           <Surface
             key={msg.id}
             style={[
               styles.messageBubble,
               msg.isUser ? styles.userMessage : styles.aiMessage,
+              { 
+                backgroundColor: msg.error 
+                  ? theme.colors.errorContainer 
+                  : msg.isUser 
+                    ? theme.colors.primary 
+                    : theme.colors.surfaceVariant 
+              },
             ]}
           >
-            <Text style={styles.messageText}>{msg.text}</Text>
-            <Text style={styles.timestamp}>
+            <Text style={[
+              styles.messageText,
+              { 
+                color: msg.error 
+                  ? theme.colors.onErrorContainer 
+                  : msg.isUser 
+                    ? theme.colors.onPrimary 
+                    : theme.colors.onSurfaceVariant 
+              }
+            ]}>
+              {msg.text}
+            </Text>
+            <Text style={[
+              styles.timestamp,
+              { 
+                color: msg.error 
+                  ? theme.colors.onErrorContainer 
+                  : msg.isUser 
+                    ? theme.colors.onPrimary 
+                    : theme.colors.onSurfaceVariant 
+              }
+            ]}>
               {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </Surface>
         ))}
+        {isLoading && (
+          <Surface style={[styles.messageBubble, styles.aiMessage, { backgroundColor: theme.colors.surfaceVariant }]}>
+            <ActivityIndicator color={theme.colors.primary} />
+          </Surface>
+        )}
       </ScrollView>
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { borderTopColor: theme.colors.outline }]}>
         <TextInput
           mode="outlined"
           value={message}
           onChangeText={setMessage}
-          placeholder="Type your message..."
+          placeholder="Ask me anything about nutrition..."
           style={styles.input}
           right={
             <TextInput.Icon
               icon="send"
               onPress={handleSend}
-              disabled={!message.trim()}
+              disabled={!message.trim() || isLoading}
             />
           }
+          disabled={isLoading}
         />
       </View>
     </KeyboardAvoidingView>
@@ -97,6 +161,8 @@ const styles = StyleSheet.create({
   },
   messagesContainer: {
     flex: 1,
+  },
+  messagesContent: {
     padding: 16,
   },
   messageBubble: {
@@ -107,11 +173,9 @@ const styles = StyleSheet.create({
   },
   userMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: '#007AFF',
   },
   aiMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: '#E9E9EB',
   },
   messageText: {
     fontSize: 16,
@@ -124,9 +188,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E9E9EB',
   },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: 'transparent',
   },
 }); 

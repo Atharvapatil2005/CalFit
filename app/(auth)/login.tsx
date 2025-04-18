@@ -1,38 +1,44 @@
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, ImageBackground } from 'react-native';
 import { Button, Text } from 'react-native-paper';
-import { signInWithGoogle } from '../../src/services/supabase';
 import { router } from 'expo-router';
+import { theme } from '../../src/constants/theme';
 
 export default function LoginScreen() {
-  const handleGoogleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-      router.replace('/(tabs)');
-    } catch (error) {
-      console.error('Error signing in:', error);
+  const handleNavigation = (isNewUser = false) => {
+    if (isNewUser) {
+      router.push('/(auth)/onboarding');
+    } else {
+      router.replace('/(tabs)/dashboard');
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Text variant="displayMedium" style={styles.title}>
+      <View style={styles.content}>
+        <Text variant="displayLarge" style={styles.title}>
           CalFit
         </Text>
-        <Text variant="titleMedium" style={styles.subtitle}>
+        <Text variant="headlineMedium" style={styles.subtitle}>
           Your AI-powered calorie tracker
         </Text>
       </View>
 
-      <View style={styles.buttonContainer}>
+      <View style={styles.footer}>
         <Button
           mode="contained"
-          onPress={handleGoogleSignIn}
+          onPress={() => handleNavigation(true)}
           style={styles.button}
-          icon="google"
+          contentStyle={styles.buttonContent}
         >
-          Sign in with Google
+          GET STARTED
+        </Button>
+        <Button
+          mode="text"
+          onPress={() => handleNavigation(false)}
+          labelStyle={styles.linkText}
+        >
+          Already have an account?
         </Button>
       </View>
     </View>
@@ -42,29 +48,41 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between',
-    padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
-  logoContainer: {
+  content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
   title: {
+    color: theme.colors.primary,
+    marginBottom: 16,
+    textAlign: 'center',
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#007AFF',
   },
   subtitle: {
+    color: theme.colors.onBackground,
     textAlign: 'center',
-    opacity: 0.7,
+    marginBottom: 32,
+    fontSize: 24,
+    lineHeight: 32,
   },
-  buttonContainer: {
-    marginBottom: 40,
+  footer: {
+    padding: 24,
+    paddingBottom: 48,
   },
   button: {
-    width: '100%',
-    paddingVertical: 8,
+    marginBottom: 16,
+    borderRadius: 8,
   },
-}); 
+  buttonContent: {
+    height: 56,
+  },
+  linkText: {
+    fontSize: 16,
+    color: theme.colors.primary,
+  },
+});
+
