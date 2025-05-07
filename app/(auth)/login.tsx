@@ -1,88 +1,121 @@
-import React from 'react';
-import { View, StyleSheet, ImageBackground } from 'react-native';
-import { Button, Text } from 'react-native-paper';
-import { router } from 'expo-router';
-import { theme } from '../../src/constants/theme';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Text, Button, TextInput, useTheme } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import { supabase } from '../../src/lib/supabase';
 
 export default function LoginScreen() {
-  const handleNavigation = (isNewUser = false) => {
-    if (isNewUser) {
-      router.push('/(auth)/onboarding');
-    } else {
-      router.replace('/(tabs)/dashboard');
+  const theme = useTheme();
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      if (data?.session) {
+        console.log('Session:', data.session);
+        router.replace('/(tabs)/dashboard');
+      }
+    } catch (error) {
+      setError('An unexpected error occurred');
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.content}>
-        <Text variant="displayLarge" style={styles.title}>
-          CalFit
-        </Text>
-        <Text variant="headlineMedium" style={styles.subtitle}>
-          Your AI-powered calorie tracker
-        </Text>
-      </View>
+        <Text variant="headlineMedium" style={styles.title}>Welcome to CalFit</Text>
+        <Text variant="bodyLarge" style={styles.subtitle}>Log in to track your meals and progress</Text>
 
-      <View style={styles.footer}>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <TextInput
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          style={styles.input}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          disabled={loading}
+        />
+
+        <TextInput
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          style={styles.input}
+          secureTextEntry
+          disabled={loading}
+        />
+
         <Button
           mode="contained"
-          onPress={() => handleNavigation(true)}
+          onPress={handleLogin}
           style={styles.button}
-          contentStyle={styles.buttonContent}
+          loading={loading}
+          disabled={loading || !email || !password}
         >
-          GET STARTED
+          Log In
         </Button>
+
         <Button
           mode="text"
-          onPress={() => handleNavigation(false)}
-          labelStyle={styles.linkText}
+          onPress={() => router.push('/(auth)/register')}
+          style={styles.button}
+          disabled={loading}
         >
-          Already have an account?
+          Don't have an account? Sign Up
         </Button>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#fff',
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
+    padding: 20,
   },
   title: {
-    color: theme.colors.primary,
-    marginBottom: 16,
+    marginBottom: 8,
     textAlign: 'center',
-    fontWeight: 'bold',
   },
   subtitle: {
-    color: theme.colors.onBackground,
-    textAlign: 'center',
     marginBottom: 32,
-    fontSize: 24,
-    lineHeight: 32,
+    textAlign: 'center',
+    color: '#666',
   },
-  footer: {
-    padding: 24,
-    paddingBottom: 48,
+  input: {
+    marginBottom: 16,
   },
   button: {
+    marginTop: 8,
+  },
+  error: {
+    color: 'red',
     marginBottom: 16,
-    borderRadius: 8,
-  },
-  buttonContent: {
-    height: 56,
-  },
-  linkText: {
-    fontSize: 16,
-    color: theme.colors.primary,
+    textAlign: 'center',
   },
 });
 

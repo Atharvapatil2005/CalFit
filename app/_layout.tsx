@@ -1,64 +1,78 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
 import { PaperProvider, Text } from 'react-native-paper';
 import { theme } from '../src/constants/theme';
-import * as SplashScreen from 'expo-splash-screen';
+import { AuthProvider } from '../src/context/AuthContext';
+import { useAuth } from '../src/context/AuthContext';
+import { router } from 'expo-router';
 
-// Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync();
+// Debug logging
+console.log('App starting...');
+
+function RootLayoutNav() {
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        router.replace('/(tabs)/dashboard');
+      } else {
+        router.replace('/(auth)/login');
+      }
+    }
+  }, [user, loading]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text variant="displayLarge" style={styles.title}>CalFit</Text>
+        <Text variant="titleLarge" style={styles.subtitle}>Loading...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <Stack>
+      <Stack.Screen 
+        name="(auth)" 
+        options={{ 
+          headerShown: false,
+          animation: 'fade'
+        }} 
+      />
+      <Stack.Screen 
+        name="(tabs)" 
+        options={{ 
+          headerShown: false,
+          animation: 'fade'
+        }} 
+      />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
-    async function prepare() {
-      try {
-        // Add any initialization logic here
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Show splash for 2 seconds
-      } catch (e) {
-        console.warn('Initialization error:', e);
-      } finally {
-        setAppIsReady(true);
-      }
-    }
-
-    prepare();
+    setAppIsReady(true);
   }, []);
-
-  const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
-      await SplashScreen.hideAsync();
-    }
-  }, [appIsReady]);
 
   if (!appIsReady) {
     return (
       <View style={styles.container}>
         <Text variant="displayLarge" style={styles.title}>CalFit</Text>
-        <Text variant="titleLarge" style={styles.subtitle}>Your AI-powered calorie tracker</Text>
+        <Text variant="titleLarge" style={styles.subtitle}>Loading...</Text>
       </View>
     );
   }
 
   return (
     <PaperProvider theme={theme}>
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-        <Stack>
-          <Stack.Screen 
-            name="index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen 
-            name="(auth)" 
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen 
-            name="(tabs)" 
-            options={{ headerShown: false }}
-          />
-        </Stack>
-      </View>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
     </PaperProvider>
   );
 }
@@ -67,6 +81,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,

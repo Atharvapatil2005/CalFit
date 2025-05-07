@@ -4,15 +4,17 @@ import { Text, Card, List, Switch, Button } from 'react-native-paper';
 import { useTheme } from 'react-native-paper';
 import { signOut } from '../../src/services/supabase';
 import { router } from 'expo-router';
+import { useAuth } from '../../src/context/AuthContext';
 
 export default function ProfileScreen() {
   const theme = useTheme();
+  const { user } = useAuth();
   const [darkMode, setDarkMode] = React.useState(false);
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.replace('/login');
+      router.replace('/(auth)/login');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -22,8 +24,8 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container}>
       <Card style={styles.card}>
         <Card.Content>
-          <Text variant="titleLarge">John Doe</Text>
-          <Text variant="bodyMedium">john.doe@example.com</Text>
+          <Text variant="titleLarge">{user?.user_metadata?.full_name || 'User'}</Text>
+          <Text variant="bodyMedium">{user?.email}</Text>
         </Card.Content>
       </Card>
 

@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { AI_CONFIG } from '../config/ai';
 
 type Message = {
@@ -5,22 +6,42 @@ type Message = {
   content: string;
 };
 
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+const REFERER = process.env.EXPO_PUBLIC_HTTP_REFERER;
+const MODEL = process.env.EXPO_PUBLIC_AI_MODEL;
+
+if (!OPENROUTER_API_KEY) {
+  console.error('❌ OpenRouter API Key is missing from Constants');
+}
+if (!REFERER) {
+  console.error('❌ HTTP Referer is missing from Constants');
+}
 
 export const sendMessage = async (messages: Message[]) => {
   try {
-    console.log('Sending message to OpenRouter (Mistral)...');
-    
+    if (!OPENROUTER_API_KEY) {
+      throw new Error('OpenRouter API Key is missing at runtime');
+    }
+
+    console.log('🔁 Sending message to OpenRouter...');
+    console.log('📤 Request Headers:', {
+      'Authorization': `Bearer ${OPENROUTER_API_KEY.substring(0, 10)}...`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': REFERER,
+      'X-Title': 'CalFit',
+    });
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://github.com/atharvapatil/CalFit',
+        'HTTP-Referer': REFERER || '',
         'X-Title': 'CalFit',
+        'OpenAI-Organization': 'atharvapatil-calfit',
       },
       body: JSON.stringify({
-        model: 'mistralai/mistral-7b-instruct',
+        model: MODEL,
         messages: [
           { role: 'system', content: AI_CONFIG.systemPrompt },
           ...messages,
@@ -31,19 +52,28 @@ export const sendMessage = async (messages: Message[]) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenRouter API Error:', {
+      const errorText = await response.text();
+      console.error('❌ OpenRouter API Error:', {
         status: response.status,
         statusText: response.statusText,
-        error: errorData
+        error: errorText,
       });
-      throw new Error(`OpenRouter API Error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+      throw new Error(`OpenRouter API Error: ${response.status} - ${errorText}`);
     }
 
-    const data = await response.json();
-    return data.choices[0].message.content;
+    const responseData = await response.json();
+    console.log('📥 Response Data:', JSON.stringify(responseData, null, 2));
+
+    // Check if the response has the expected structure
+    if (!responseData?.choices?.[0]?.message?.content) {
+      console.error('❌ Invalid response format:', responseData);
+      throw new Error('Invalid response format from OpenRouter API');
+    }
+
+    // Return just the message content
+    return responseData.choices[0].message.content;
   } catch (error: any) {
-    console.error('AI Service Error:', error);
-    throw new Error(`AI Service Error: ${error.message || 'Unknown error occurred'}`);
+    console.error('❌ AI Service Error:', error.message);
+    throw error;
   }
 };

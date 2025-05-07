@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform } from 'react-native';
 import { Text, Button, TextInput } from 'react-native-paper';
 import { router } from 'expo-router';
 import { theme } from '../../src/constants/theme';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function ProfileScreen() {
   const [dob, setDob] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
 
@@ -16,7 +14,6 @@ export default function ProfileScreen() {
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
     if (selectedDate) {
       setDob(selectedDate);
     }
@@ -37,20 +34,21 @@ export default function ProfileScreen() {
           </Text>
           <Button
             mode="outlined"
-            onPress={() => setShowDatePicker(true)}
+            onPress={() => {
+              if (Platform.OS === 'ios') {
+                // For iOS, we'll use a modal with a simple date picker
+                // You can implement a custom modal here if needed
+              } else {
+                // For Android, we'll use the native date picker
+                const currentDate = new Date();
+                const date = new Date(currentDate.getFullYear() - 18, currentDate.getMonth(), currentDate.getDate());
+                handleDateChange(null, date);
+              }
+            }}
             style={styles.dateButton}
           >
             {dob.toLocaleDateString()}
           </Button>
-          {showDatePicker && (
-            <DateTimePicker
-              value={dob}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-              maximumDate={new Date()}
-            />
-          )}
         </View>
 
         <View style={styles.inputGroup}>

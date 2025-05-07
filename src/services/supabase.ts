@@ -34,6 +34,68 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
+// Types
+export type Meal = {
+  id: string;
+  user_id: string;
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  food_name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  timestamp: string;
+  created_at: string;
+};
+
+// Meal operations
+export const addMeal = async (meal: Omit<Meal, 'id' | 'created_at' | 'user_id'>) => {
+  const { data, error } = await supabase
+    .from('meals')
+    .insert([meal])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const getTodayMeals = async (userId: string) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const { data, error } = await supabase
+    .from('meals')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('timestamp', today.toISOString())
+    .order('timestamp', { ascending: true });
+
+  if (error) throw error;
+  return data;
+};
+
+export const deleteMeal = async (mealId: string) => {
+  const { error } = await supabase
+    .from('meals')
+    .delete()
+    .eq('id', mealId);
+
+  if (error) throw error;
+};
+
+export const updateMeal = async (mealId: string, updates: Partial<Meal>) => {
+  const { data, error } = await supabase
+    .from('meals')
+    .update(updates)
+    .eq('id', mealId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
 // Auth helper functions
 export const signInWithGoogle = async () => {
   try {
