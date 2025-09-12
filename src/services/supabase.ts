@@ -60,17 +60,23 @@ export const addMeal = async (meal: Omit<Meal, 'id' | 'created_at' | 'user_id'>)
   return data;
 };
 
-export const getTodayMeals = async (userId: string) => {
+export const getTodayMeals = async (userId: string | null) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
-  const { data, error } = await supabase
+
+  let query = supabase
     .from('meals')
     .select('*')
-    .eq('user_id', userId)
     .gte('timestamp', today.toISOString())
     .order('timestamp', { ascending: true });
 
+  if (userId) {
+    query = query.or(`user_id.eq.${userId},user_id.is.null`);
+  } else {
+    query = query.is('user_id', null);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   return data;
 };

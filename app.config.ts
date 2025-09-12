@@ -24,16 +24,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router'
   ],
   scheme: 'calfit',
-    extra: {
-      eas: {
-        projectId: process.env.EAS_PROJECT_ID
-      },
+  extra: {
+    eas: {
+      projectId: process.env.EAS_PROJECT_ID
+    },
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-      openRouterApiKey: process.env.EXPO_PUBLIC_OPENROUTER_API_KEY,
-      httpReferer: process.env.EXPO_PUBLIC_HTTP_REFERER,
-      aiModel: process.env.EXPO_PUBLIC_AI_MODEL,
-    nutritionixAppId: process.env.EXPO_PUBLIC_NUTRITIONIX_APP_ID,
-    nutritionixAppKey: process.env.EXPO_PUBLIC_NUTRITIONIX_APP_KEY
-    }
+    openRouterApiKey: process.env.EXPO_PUBLIC_OPENROUTER_API_KEY,
+    httpReferer: process.env.EXPO_PUBLIC_HTTP_REFERER,
+    aiModel: process.env.EXPO_PUBLIC_AI_MODEL || 'microsoft/phi-4-reasoning-plus:free'
+  }
 });

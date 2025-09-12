@@ -1,5 +1,5 @@
 export const AI_CONFIG = {
-  model: 'deepseek/deepseek-r1-distill-llama-70b:free',
+  model: 'nousresearch/deephermes-3-mistral-24b-preview:free',
   temperature: 0.7,
   maxTokens: 500,
   systemPrompt: `You are CalFit, an AI nutrition assistant. Your role is to:

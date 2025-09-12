@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { Text, Button, Portal, Modal, TextInput, List, Divider, useTheme } from 'react-native-paper';
+import { Text, Button, Portal, Modal, TextInput, List, Divider, useTheme, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { addMeal, getTodayMeals, Meal } from '../../src/services/supabase';
+import { addMeal, getTodayMeals, deleteMeal, Meal } from '../../src/services/supabase';
 import { searchFood, FoodItem } from '../../src/services/nutritionService';
 import { useAuth } from '../../src/context/AuthContext';
 
@@ -19,16 +19,15 @@ export default function MealsScreen() {
 
   useEffect(() => {
     if (user) {
-    loadTodayMeals();
+      loadTodayMeals();
     }
   }, [user]);
 
   const loadTodayMeals = async () => {
     try {
       setLoading(true);
-      if (!user) throw new Error('No user found');
-      
-      const todayMeals = await getTodayMeals(user.id);
+      const userId = user ? user.id : null;
+      const todayMeals = await getTodayMeals(userId);
       setMeals(todayMeals);
     } catch (error) {
       console.error('Error loading meals:', error);
@@ -37,9 +36,17 @@ export default function MealsScreen() {
     }
   };
 
+  const handleDeleteMeal = async (mealId: string) => {
+    try {
+      await deleteMeal(mealId);
+      await loadTodayMeals();
+    } catch (error) {
+      console.error('Error deleting meal:', error);
+    }
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
-    
     try {
       setIsSearching(true);
       const results = await searchFood(searchQuery);
@@ -54,7 +61,6 @@ export default function MealsScreen() {
   const handleAddMeal = async (food: FoodItem) => {
     try {
       if (!user) throw new Error('No user found');
-
       const newMeal = {
         meal_type: selectedMealType,
         food_name: food.food_name,
@@ -64,7 +70,6 @@ export default function MealsScreen() {
         fats: food.fats,
         timestamp: new Date().toISOString(),
       };
-
       console.log('Logging meal (no user_id):', newMeal);
       await addMeal(newMeal);
       await loadTodayMeals();
@@ -124,6 +129,19 @@ export default function MealsScreen() {
                   color={theme.colors.primary}
                 />
               )}
+              right={props => (
+                <IconButton
+                  {...props}
+                  icon={() => (
+                    <MaterialCommunityIcons
+                      name="delete"
+                      size={24}
+                      color={theme.colors.error}
+                    />
+                  )}
+                  onPress={() => handleDeleteMeal(meal.id)}
+                />
+              )}
             />
           ))}
         </ScrollView>
@@ -136,14 +154,12 @@ export default function MealsScreen() {
           contentContainerStyle={styles.modalContent}
         >
           <Text variant="headlineSmall" style={styles.modalTitle}>Add Meal</Text>
-          
           <View style={styles.mealTypeContainer}>
             {renderMealTypeButton('breakfast', 'food-croissant')}
             {renderMealTypeButton('lunch', 'food')}
             {renderMealTypeButton('dinner', 'food-steak')}
             {renderMealTypeButton('snack', 'food-apple')}
           </View>
-
           <TextInput
             label="Search for food"
             value={searchQuery}
@@ -156,18 +172,17 @@ export default function MealsScreen() {
               />
             }
           />
-
           {isSearching ? (
             <ActivityIndicator style={styles.loader} />
           ) : (
             <ScrollView style={styles.searchResults}>
               {searchResults.map((food) => (
-                  <List.Item
+                <List.Item
                   key={food.food_name}
-                    title={food.food_name}
-                    description={`${food.calories} kcal | P: ${food.protein}g | C: ${food.carbs}g | F: ${food.fats}g`}
-                    onPress={() => handleAddMeal(food)}
-                  />
+                  title={food.food_name}
+                  description={`${food.calories} kcal | P: ${food.protein}g | C: ${food.carbs}g | F: ${food.fats}g`}
+                  onPress={() => handleAddMeal(food)}
+                />
               ))}
             </ScrollView>
           )}
