@@ -2,7 +2,7 @@
 
 ## P0 - Launch blockers
 
-- [ ] Unify Supabase into one singleton client
+- [x] Unify Supabase into one singleton client
   Severity: P0
   Why it breaks production: Auth state and DB calls use different Supabase clients and storage backends, causing session drift and inconsistent behavior.
   Exact files affected: `src/lib/supabase.ts`, `src/services/supabase.ts`, `src/context/AuthContext.tsx`, `app/(auth)/login.tsx`, `app/login-callback.tsx`, any remaining imports of either client
@@ -12,7 +12,7 @@
   Git commit message: `refactor: unify supabase client into single singleton`
   Rollback plan: Restore previous client split and revert import changes if auth fails in smoke test
 
-- [ ] Fix auth bootstrap and session restore
+- [x] Fix auth bootstrap and session restore
   Severity: P0
   Why it breaks production: App redirects before initial session restore completes, so signed-in users can be bounced to login on cold start.
   Exact files affected: `src/context/AuthContext.tsx`, `app/_layout.tsx`, optionally `app/index.tsx`
@@ -32,7 +32,7 @@
   Git commit message: `fix: enforce meal ownership with auth uid defaults and rls`
   Rollback plan: Revert migration and client insert payload changes, then temporarily disable add-meal UI until fixed
 
-- [ ] Remove broken routes and dead onboarding paths
+- [x] Remove broken routes and dead onboarding paths
   Severity: P0
   Why it breaks production: Several taps navigate to screens that do not exist or to wrong absolute paths, causing immediate user-facing failures.
   Exact files affected: `app/(auth)/login.tsx`, `app/(auth)/profile.tsx`, `app/(auth)/_layout.tsx`, `app/(auth)/onboarding.tsx`, `app/(onboarding)/_layout.tsx`, `app/(onboarding)/goals.tsx`, `app/(onboarding)/nutrition.tsx`, route targets across `app/`
@@ -52,7 +52,7 @@
   Git commit message: `fix: align oauth redirect uri and login callback route`
   Rollback plan: Disable Google sign-in button and keep email/password auth only
 
-- [ ] Remove exposed API keys from client-side
+- [x] Remove exposed API keys from client-side
   Severity: P0
   Why it breaks production: OpenRouter and Nutritionix keys are shipped in the app bundle and can be extracted and abused.
   Exact files affected: `src/services/aiService.ts`, `src/services/nutritionService.ts`, `app.config.ts`, `.env`
@@ -62,7 +62,7 @@
   Git commit message: `security: remove provider api keys from mobile client`
   Rollback plan: Temporarily disable AI and Nutritionix features rather than re-exposing keys
 
-- [ ] Remove secret logging from AI and Nutrition services
+- [x] Remove secret logging from AI and Nutrition services
   Severity: P0
   Why it breaks production: Request metadata and key prefixes are written to logs, which can leak sensitive information on devices and crash tools.
   Exact files affected: `src/services/aiService.ts`, `src/services/nutritionService.ts`, `src/context/AuthContext.tsx`, `app/_layout.tsx`, `app/(auth)/login.tsx`, `app/login-callback.tsx`, `app/(tabs)/meals.tsx`
