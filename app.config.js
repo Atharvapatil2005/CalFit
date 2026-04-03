@@ -27,13 +27,14 @@ export default {
       favicon: './assets/favicon.png'
     },
     extra: {
-      openRouterApiKey: process.env.EXPO_PUBLIC_OPENROUTER_API_KEY,
-      httpReferer: process.env.EXPO_PUBLIC_HTTP_REFERER,
       eas: {
         projectId: process.env.EAS_PROJECT_ID
-      }
+      },
+      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      aiModel: process.env.EXPO_PUBLIC_AI_MODEL || 'microsoft/phi-4-reasoning-plus:free'
     },
     plugins: ['expo-router'],
     scheme: 'calfit'
   }
-}; 
+};
