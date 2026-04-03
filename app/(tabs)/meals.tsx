@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { Text, Button, Portal, Modal, TextInput, List, Divider, useTheme, IconButton } from 'react-native-paper';
+import { Text, Button, Portal, Modal, TextInput, List, useTheme, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { addMeal, getTodayMeals, deleteMeal, Meal } from '../../src/services/supabase';
 import { searchFood, FoodItem } from '../../src/services/nutritionService';
@@ -11,11 +11,17 @@ export default function MealsScreen() {
   const { user } = useAuth();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
+  const [manualFoodName, setManualFoodName] = useState('');
+  const [manualCalories, setManualCalories] = useState('');
+  const [manualProtein, setManualProtein] = useState('');
+  const [manualCarbs, setManualCarbs] = useState('');
+  const [manualFats, setManualFats] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -26,11 +32,11 @@ export default function MealsScreen() {
   const loadTodayMeals = async () => {
     try {
       setLoading(true);
-      const userId = user ? user.id : null;
-      const todayMeals = await getTodayMeals(userId);
+      setError('');
+      const todayMeals = await getTodayMeals(user?.id ?? null);
       setMeals(todayMeals);
-    } catch (error) {
-      console.error('Error loading meals:', error);
+    } catch (_error) {
+      setError('Unable to load meals right now.');
     } finally {
       setLoading(false);
     }
@@ -40,8 +46,8 @@ export default function MealsScreen() {
     try {
       await deleteMeal(mealId);
       await loadTodayMeals();
-    } catch (error) {
-      console.error('Error deleting meal:', error);
+    } catch (_error) {
+      setError('Unable to delete that meal right now.');
     }
   };
 
@@ -49,10 +55,11 @@ export default function MealsScreen() {
     if (!searchQuery.trim()) return;
     try {
       setIsSearching(true);
+      setError('');
       const results = await searchFood(searchQuery);
       setSearchResults(results);
     } catch (error) {
-      console.error('Error searching food:', error);
+      setError(error instanceof Error ? error.message : 'Food search is unavailable right now.');
     } finally {
       setIsSearching(false);
     }
@@ -62,6 +69,7 @@ export default function MealsScreen() {
     try {
       if (!user) throw new Error('No user found');
       const newMeal = {
+        user_id: user.id,
         meal_type: selectedMealType,
         food_name: food.food_name,
         calories: food.calories,
@@ -70,18 +78,53 @@ export default function MealsScreen() {
         fats: food.fats,
         timestamp: new Date().toISOString(),
       };
-      console.log('Logging meal (no user_id):', newMeal);
       await addMeal(newMeal);
       await loadTodayMeals();
-      setIsModalVisible(false);
-      setSearchQuery('');
-      setSearchResults([]);
-    } catch (error) {
-      console.error('Error adding meal:', error);
+      resetMealModal();
+    } catch (_error) {
+      setError('Unable to save that meal right now.');
     }
   };
 
-  const renderMealTypeButton = (type: 'breakfast' | 'lunch' | 'dinner' | 'snack', icon: string) => (
+  const handleManualAddMeal = async () => {
+    if (!user || !manualFoodName.trim()) {
+      return;
+    }
+
+    try {
+      setError('');
+      await addMeal({
+        user_id: user.id,
+        meal_type: selectedMealType,
+        food_name: manualFoodName.trim(),
+        calories: Number(manualCalories) || 0,
+        protein: Number(manualProtein) || 0,
+        carbs: Number(manualCarbs) || 0,
+        fats: Number(manualFats) || 0,
+        timestamp: new Date().toISOString(),
+      });
+      await loadTodayMeals();
+      resetMealModal();
+    } catch (_error) {
+      setError('Unable to save that meal right now.');
+    }
+  };
+
+  const resetMealModal = () => {
+    setIsModalVisible(false);
+    setSearchQuery('');
+    setSearchResults([]);
+    setManualFoodName('');
+    setManualCalories('');
+    setManualProtein('');
+    setManualCarbs('');
+    setManualFats('');
+  };
+
+  const renderMealTypeButton = (
+    type: 'breakfast' | 'lunch' | 'dinner' | 'snack',
+    icon: keyof typeof MaterialCommunityIcons.glyphMap
+  ) => (
     <Button
       mode={selectedMealType === type ? 'contained' : 'outlined'}
       onPress={() => setSelectedMealType(type)}
@@ -107,10 +150,18 @@ export default function MealsScreen() {
         </Button>
       </View>
 
+      {error ? <Text style={[styles.error, { color: theme.colors.error }]}>{error}</Text> : null}
+
       {loading ? (
         <ActivityIndicator style={styles.loader} />
       ) : (
         <ScrollView style={styles.mealsList}>
+          {meals.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text variant="titleMedium">No meals logged yet</Text>
+              <Text variant="bodyMedium">Add your first meal to start tracking today's intake.</Text>
+            </View>
+          ) : null}
           {meals.map((meal) => (
             <List.Item
               key={meal.id}
@@ -186,6 +237,52 @@ export default function MealsScreen() {
               ))}
             </ScrollView>
           )}
+          <Text variant="titleMedium" style={styles.manualSectionTitle}>Quick add manually</Text>
+          <TextInput
+            label="Food name"
+            value={manualFoodName}
+            onChangeText={setManualFoodName}
+            style={styles.searchInput}
+          />
+          <View style={styles.macroRow}>
+            <TextInput
+              label="Calories"
+              value={manualCalories}
+              onChangeText={setManualCalories}
+              keyboardType="numeric"
+              style={styles.macroInput}
+            />
+            <TextInput
+              label="Protein"
+              value={manualProtein}
+              onChangeText={setManualProtein}
+              keyboardType="numeric"
+              style={styles.macroInput}
+            />
+          </View>
+          <View style={styles.macroRow}>
+            <TextInput
+              label="Carbs"
+              value={manualCarbs}
+              onChangeText={setManualCarbs}
+              keyboardType="numeric"
+              style={styles.macroInput}
+            />
+            <TextInput
+              label="Fats"
+              value={manualFats}
+              onChangeText={setManualFats}
+              keyboardType="numeric"
+              style={styles.macroInput}
+            />
+          </View>
+          <Button
+            mode="contained"
+            onPress={handleManualAddMeal}
+            disabled={!manualFoodName.trim()}
+          >
+            Save Meal
+          </Button>
         </Modal>
       </Portal>
     </View>
@@ -205,6 +302,14 @@ const styles = StyleSheet.create({
   },
   mealsList: {
     flex: 1,
+  },
+  error: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  emptyState: {
+    padding: 16,
+    gap: 8,
   },
   loader: {
     marginTop: 32,
@@ -234,4 +339,16 @@ const styles = StyleSheet.create({
   searchResults: {
     maxHeight: 300,
   },
-}); 
+  manualSectionTitle: {
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  macroRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  macroInput: {
+    flex: 1,
+  },
+});

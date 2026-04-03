@@ -30,8 +30,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-    openRouterApiKey: process.env.EXPO_PUBLIC_OPENROUTER_API_KEY,
-    httpReferer: process.env.EXPO_PUBLIC_HTTP_REFERER,
     aiModel: process.env.EXPO_PUBLIC_AI_MODEL || 'microsoft/phi-4-reasoning-plus:free'
   }
 });

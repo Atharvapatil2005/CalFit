@@ -1,27 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router, useSegments } from 'expo-router';
 import { PaperProvider, Text } from 'react-native-paper';
 import { theme } from '../src/constants/theme';
 import { AuthProvider } from '../src/context/AuthContext';
 import { useAuth } from '../src/context/AuthContext';
-import { router } from 'expo-router';
-
-// Debug logging
-console.log('App starting...');
 
 function RootLayoutNav() {
   const { user, loading } = useAuth();
+  const segments = useSegments();
 
   useEffect(() => {
-    if (!loading) {
-      if (user) {
-        router.replace('/(tabs)/dashboard');
-      } else {
-        router.replace('/(auth)/login');
-      }
+    if (loading) {
+      return;
     }
-  }, [user, loading]);
+
+    const inAuthGroup = segments[0] === '(auth)';
+    const inTabsGroup = segments[0] === '(tabs)';
+    const isCallbackRoute = segments[0] === 'login-callback';
+
+    if (user && !inTabsGroup) {
+      router.replace('/(tabs)/dashboard');
+    } else if (!user && !inAuthGroup && !isCallbackRoute) {
+      router.replace('/(auth)/login');
+    }
+  }, [loading, segments, user]);
 
   if (loading) {
     return (
@@ -33,41 +36,39 @@ function RootLayoutNav() {
   }
 
   return (
-    <Stack>
-      <Stack.Screen 
-        name="(auth)" 
-        options={{ 
-          headerShown: false,
-          animation: 'fade'
-        }} 
-      />
-      <Stack.Screen 
-        name="(tabs)" 
-        options={{ 
-          headerShown: false,
-          animation: 'fade'
-        }} 
-      />
-    </Stack>
+      <Stack>
+        <Stack.Screen
+          name="(auth)"
+          options={{
+            headerShown: false,
+            animation: 'fade'
+          }}
+        />
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false,
+            animation: 'fade'
+          }}
+        />
+        <Stack.Screen
+          name="login-callback"
+          options={{
+            headerShown: false,
+            animation: 'fade'
+          }}
+        />
+        <Stack.Screen
+          name="meals/add"
+          options={{
+            headerShown: true
+          }}
+        />
+      </Stack>
   );
 }
 
 export default function RootLayout() {
-  const [appIsReady, setAppIsReady] = useState(false);
-
-  useEffect(() => {
-    setAppIsReady(true);
-  }, []);
-
-  if (!appIsReady) {
-    return (
-      <View style={styles.container}>
-        <Text variant="displayLarge" style={styles.title}>CalFit</Text>
-        <Text variant="titleLarge" style={styles.subtitle}>Loading...</Text>
-      </View>
-    );
-  }
-
   return (
     <PaperProvider theme={theme}>
       <AuthProvider>
@@ -103,4 +104,4 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     textAlign: 'center',
   },
-}); 
+});

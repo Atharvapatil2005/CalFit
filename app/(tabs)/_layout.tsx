@@ -3,6 +3,12 @@ import { Tabs } from 'expo-router';
 import { useTheme } from 'react-native-paper';
 import Icon from '@expo/vector-icons/MaterialCommunityIcons';
 
+type TabIconProps = {
+  color: string;
+  size: number;
+  focused: boolean;
+};
+
 export default function TabsLayout() {
   const theme = useTheme();
 
@@ -18,7 +24,7 @@ export default function TabsLayout() {
         name="dashboard"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: TabIconProps) => (
             <Icon name="view-dashboard" size={size} color={color} />
           ),
         }}
@@ -27,7 +33,7 @@ export default function TabsLayout() {
         name="meals"
         options={{
           title: 'Meals',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: TabIconProps) => (
             <Icon name="food" size={size} color={color} />
           ),
         }}
@@ -36,7 +42,7 @@ export default function TabsLayout() {
         name="chat"
         options={{
           title: 'Chat',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: TabIconProps) => (
             <Icon name="chat" size={size} color={color} />
           ),
         }}
@@ -45,7 +51,7 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: TabIconProps) => (
             <Icon name="account" size={size} color={color} />
           ),
         }}

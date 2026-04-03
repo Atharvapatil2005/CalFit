@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
-import { Text, useTheme, IconButton, Card } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Text, useTheme, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { getTodayMeals } from '../../src/services/supabase';
+import { getTodayMeals, Meal } from '../../src/services/supabase';
 import { useAuth } from '../../src/context/AuthContext';
 
 type MealType = {
@@ -35,7 +34,6 @@ export default function DashboardScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuth();
-  const [meals, setMeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dailyData, setDailyData] = useState<DailyData>({
     macros: {
@@ -44,10 +42,10 @@ export default function DashboardScreen() {
       fat: { current: 0, target: 70 }
     },
     meals: {
-      breakfast: { name: 'Breakfast', calories: 500, icon: 'food-croissant' },
-      lunch: { name: 'Lunch', calories: 700, icon: 'food' },
-      dinner: { name: 'Dinner', calories: 600, icon: 'food-steak' },
-      snacks: { name: 'Snacks', calories: 200, icon: 'food-apple' }
+      breakfast: { name: 'Breakfast', calories: 0, icon: 'food-croissant' },
+      lunch: { name: 'Lunch', calories: 0, icon: 'food' },
+      dinner: { name: 'Dinner', calories: 0, icon: 'food-steak' },
+      snack: { name: 'Snack', calories: 0, icon: 'food-apple' }
     },
     water: {
       current: 0,
@@ -60,7 +58,9 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     if (user) {
-    loadTodayMeals();
+      loadTodayMeals();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
@@ -69,13 +69,16 @@ export default function DashboardScreen() {
       if (!user) return;
       
       const todayMeals = await getTodayMeals(user.id);
-      setMeals(todayMeals);
+
+      const mealTotals = todayMeals.reduce<Record<string, number>>((acc, meal: Meal) => {
+        acc[meal.meal_type] = (acc[meal.meal_type] ?? 0) + meal.calories;
+        return acc;
+      }, {});
       
-      // Update macros based on actual meals
-      const macros = todayMeals.reduce((acc: any, meal: any) => ({
+      const macros = todayMeals.reduce((acc, meal: Meal) => ({
         carbs: acc.carbs + (meal.carbs || 0),
         protein: acc.protein + (meal.protein || 0),
-        fat: acc.fats + (meal.fats || 0)
+        fat: acc.fat + (meal.fats || 0)
       }), { carbs: 0, protein: 0, fat: 0 });
 
       setDailyData(prev => ({
@@ -84,10 +87,23 @@ export default function DashboardScreen() {
           carbs: { ...prev.macros.carbs, current: macros.carbs },
           protein: { ...prev.macros.protein, current: macros.protein },
           fat: { ...prev.macros.fat, current: macros.fat }
+        },
+        meals: {
+          breakfast: { ...prev.meals.breakfast, calories: mealTotals.breakfast ?? 0 },
+          lunch: { ...prev.meals.lunch, calories: mealTotals.lunch ?? 0 },
+          dinner: { ...prev.meals.dinner, calories: mealTotals.dinner ?? 0 },
+          snack: { ...prev.meals.snack, calories: mealTotals.snack ?? 0 }
         }
       }));
-    } catch (error) {
-      console.error('Error loading meals:', error);
+    } catch (_error) {
+      setDailyData(prev => ({
+        ...prev,
+        macros: {
+          carbs: { ...prev.macros.carbs, current: 0 },
+          protein: { ...prev.macros.protein, current: 0 },
+          fat: { ...prev.macros.fat, current: 0 }
+        }
+      }));
     } finally {
       setLoading(false);
     }
@@ -101,7 +117,8 @@ export default function DashboardScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text variant="headlineMedium">Today's Progress</Text>
-        </View>
+        {loading ? <Text variant="bodyMedium">Refreshing...</Text> : null}
+      </View>
 
       <Card style={styles.card}>
         <Card.Content>

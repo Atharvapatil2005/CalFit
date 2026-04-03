@@ -10,7 +10,7 @@ export default function ProfileScreen() {
   const [weight, setWeight] = useState('');
 
   const handleNext = () => {
-    router.push('/welcome');
+    router.push('/(auth)/welcome');
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {

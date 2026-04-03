@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Button, TextInput, useTheme } from 'react-native-paper';
+import { Text, Button, TextInput } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { supabase } from '../../src/lib/supabase';
+import { useAuth } from '../../src/context/AuthContext';
 
 export default function LoginScreen() {
-  const theme = useTheme();
   const router = useRouter();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,23 +17,10 @@ export default function LoginScreen() {
       setLoading(true);
       setError('');
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError(error.message);
-        return;
-      }
-
-      if (data?.session) {
-        console.log('Session:', data.session);
-        router.replace('/(tabs)/dashboard');
-      }
+      await signIn(email, password);
+      router.replace('/(tabs)/dashboard');
     } catch (error) {
-      setError('An unexpected error occurred');
-      console.error('Login error:', error);
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -78,11 +65,11 @@ export default function LoginScreen() {
 
         <Button
           mode="text"
-          onPress={() => router.push('/(auth)/register')}
+          onPress={() => router.push('/(auth)/onboarding')}
           style={styles.button}
           disabled={loading}
         >
-          Don't have an account? Sign Up
+          New here? Start onboarding
         </Button>
       </View>
     </ScrollView>
@@ -118,4 +105,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-

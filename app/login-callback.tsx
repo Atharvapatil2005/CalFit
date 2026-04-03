@@ -11,11 +11,9 @@ export default function LoginCallback() {
       const { data, error } = await supabase.auth.getSession();
 
       if (data?.session) {
-        console.log('✅ Logged in!');
-        router.replace('/(tabs)'); // or your home screen
+        router.replace('/(tabs)/dashboard');
       } else {
-        console.log('❌ Session not found', error);
-        router.replace('/login'); // fallback to login screen
+        router.replace('/(auth)/login');
       }
     };
 

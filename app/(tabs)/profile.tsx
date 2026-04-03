@@ -1,22 +1,19 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { Text, Card, List, Switch, Button } from 'react-native-paper';
-import { useTheme } from 'react-native-paper';
-import { signOut } from '../../src/services/supabase';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 
 export default function ProfileScreen() {
-  const theme = useTheme();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [darkMode, setDarkMode] = React.useState(false);
 
   const handleSignOut = async () => {
     try {
       await signOut();
       router.replace('/(auth)/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
+    } catch (_error) {
+      // Keep the user on the current screen if sign-out fails.
     }
   };
 

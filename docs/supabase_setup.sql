@@ -1,7 +1,7 @@
 -- Create meals table
 CREATE TABLE IF NOT EXISTS public.meals (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     meal_type TEXT NOT NULL CHECK (meal_type IN ('breakfast', 'lunch', 'dinner', 'snack')),
     food_name TEXT NOT NULL,
     calories INTEGER NOT NULL,
@@ -22,7 +22,7 @@ CREATE POLICY "Users can view their own meals"
 
 CREATE POLICY "Users can insert their own meals"
     ON public.meals FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (user_id = auth.uid());
 
 CREATE POLICY "Users can update their own meals"
     ON public.meals FOR UPDATE
