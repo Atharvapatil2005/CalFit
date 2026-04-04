@@ -1,5 +1,7 @@
 # CalFit
 
+
+
 CalFit is an AI-powered calorie tracker designed to help users achieve their health goals. The app provides meal suggestions, calorie tracking, and an AI-integrated meal scanner for seamless nutrition monitoring.
 
 ## Features
