@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../src/constants/theme';
 
 type Goal = 'lose_weight' | 'maintain_weight' | 'gain_weight';
@@ -42,82 +43,90 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Let's get to know you better!
-        </Text>
-      </View>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text variant="headlineMedium" style={styles.title}>
+              Let's get to know you better!
+            </Text>
+          </View>
 
-      <View style={styles.section}>
-        <Text variant="titleLarge" style={styles.sectionTitle}>
-          What goal do you have in mind?
-        </Text>
-        <View style={styles.goalsContainer}>
-          {goals.map((goal) => (
-            <Pressable
-              key={goal.value}
-              style={[
-                styles.goalButton,
-                primaryGoal === goal.value && styles.selectedGoal,
-              ]}
-              onPress={() => setPrimaryGoal(goal.value)}
+          <View style={styles.section}>
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              What goal do you have in mind?
+            </Text>
+            <View style={styles.goalsContainer}>
+              {goals.map((goal) => (
+                <Pressable
+                  key={goal.value}
+                  style={[
+                    styles.goalButton,
+                    primaryGoal === goal.value && styles.selectedGoal,
+                  ]}
+                  onPress={() => setPrimaryGoal(goal.value)}
+                >
+                  <Text
+                    style={[
+                      styles.goalText,
+                      primaryGoal === goal.value && styles.selectedGoalText,
+                    ]}
+                  >
+                    {goal.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              What additional goals do you have?
+            </Text>
+            <View style={styles.goalsContainer}>
+              {additionalGoalOptions.map((goal) => (
+                <Pressable
+                  key={goal.value}
+                  style={[
+                    styles.goalButton,
+                    additionalGoals.has(goal.value) && styles.selectedGoal,
+                  ]}
+                  onPress={() => toggleAdditionalGoal(goal.value)}
+                >
+                  <Text
+                    style={[
+                      styles.goalText,
+                      additionalGoals.has(goal.value) && styles.selectedGoalText,
+                    ]}
+                  >
+                    {goal.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.footer}>
+            <Text variant="bodyMedium" style={styles.footerText}>
+              We use this information to calculate and provide you with daily personalized recommendations.
+            </Text>
+            <Button
+              mode="contained"
+              onPress={handleNext}
+              disabled={!primaryGoal}
+              style={styles.button}
+              contentStyle={styles.buttonContent}
             >
-              <Text
-                style={[
-                  styles.goalText,
-                  primaryGoal === goal.value && styles.selectedGoalText,
-                ]}
-              >
-                {goal.label}
-              </Text>
-            </Pressable>
-          ))}
+              NEXT
+            </Button>
+          </View>
         </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text variant="titleLarge" style={styles.sectionTitle}>
-          What additional goals do you have?
-        </Text>
-        <View style={styles.goalsContainer}>
-          {additionalGoalOptions.map((goal) => (
-            <Pressable
-              key={goal.value}
-              style={[
-                styles.goalButton,
-                additionalGoals.has(goal.value) && styles.selectedGoal,
-              ]}
-              onPress={() => toggleAdditionalGoal(goal.value)}
-            >
-              <Text
-                style={[
-                  styles.goalText,
-                  additionalGoals.has(goal.value) && styles.selectedGoalText,
-                ]}
-              >
-                {goal.label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.footer}>
-        <Text variant="bodyMedium" style={styles.footerText}>
-          We use this information to calculate and provide you with daily personalized recommendations.
-        </Text>
-        <Button
-          mode="contained"
-          onPress={handleNext}
-          disabled={!primaryGoal}
-          style={styles.button}
-          contentStyle={styles.buttonContent}
-        >
-          NEXT
-        </Button>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -128,11 +137,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 24,
+    paddingBottom: 16,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 680,
+    alignSelf: 'center',
   },
   header: {
     padding: 24,
-    paddingTop: 48,
+    paddingTop: 24,
   },
   title: {
     fontWeight: 'bold',
@@ -141,6 +155,7 @@ const styles = StyleSheet.create({
   },
   section: {
     padding: 24,
+    paddingTop: 0,
   },
   sectionTitle: {
     marginBottom: 16,
@@ -167,7 +182,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 24,
-    paddingTop: 0,
+    paddingTop: 8,
   },
   footerText: {
     textAlign: 'center',

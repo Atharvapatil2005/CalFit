@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Button, TextInput } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/context/AuthContext';
 
 export default function LoginScreen() {
@@ -27,52 +28,54 @@ export default function LoginScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text variant="headlineMedium" style={styles.title}>Welcome to CalFit</Text>
-        <Text variant="bodyLarge" style={styles.subtitle}>Log in to track your meals and progress</Text>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <View style={styles.content}>
+          <Text variant="headlineMedium" style={styles.title}>Welcome to CalFit</Text>
+          <Text variant="bodyLarge" style={styles.subtitle}>Log in to track your meals and progress</Text>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TextInput
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          style={styles.input}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          disabled={loading}
-        />
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            style={styles.input}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            disabled={loading}
+          />
 
-        <TextInput
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          style={styles.input}
-          secureTextEntry
-          disabled={loading}
-        />
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            style={styles.input}
+            secureTextEntry
+            disabled={loading}
+          />
 
-        <Button
-          mode="contained"
-          onPress={handleLogin}
-          style={styles.button}
-          loading={loading}
-          disabled={loading || !email || !password}
-        >
-          Log In
-        </Button>
+          <Button
+            mode="contained"
+            onPress={handleLogin}
+            style={styles.button}
+            loading={loading}
+            disabled={loading || !email || !password}
+          >
+            Log In
+          </Button>
 
-        <Button
-          mode="text"
-          onPress={() => router.push('/(auth)/onboarding')}
-          style={styles.button}
-          disabled={loading}
-        >
-          New here? Start onboarding
-        </Button>
-      </View>
-    </ScrollView>
+          <Button
+            mode="text"
+            onPress={() => router.push('/(auth)/onboarding')}
+            style={styles.button}
+            disabled={loading}
+          >
+            New here? Start onboarding
+          </Button>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -81,8 +84,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  content: {
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
     padding: 20,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
   },
   title: {
     marginBottom: 8,
