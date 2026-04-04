@@ -5,6 +5,7 @@ import { PaperProvider, Text } from 'react-native-paper';
 import { theme } from '../src/constants/theme';
 import { AuthProvider } from '../src/context/AuthContext';
 import { useAuth } from '../src/context/AuthContext';
+import { OnboardingProvider } from '../src/context/OnboardingContext';
 
 function RootLayoutNav() {
   const { user, loading } = useAuth();
@@ -72,7 +73,9 @@ export default function RootLayout() {
   return (
     <PaperProvider theme={theme}>
       <AuthProvider>
-        <RootLayoutNav />
+        <OnboardingProvider>
+          <RootLayoutNav />
+        </OnboardingProvider>
       </AuthProvider>
     </PaperProvider>
   );

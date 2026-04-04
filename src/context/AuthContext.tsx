@@ -7,6 +7,11 @@ type AuthContextType = {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    metadata?: Record<string, unknown>
+  ) => Promise<{ user: User | null; session: Session | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -64,6 +69,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signUp = async (
+    email: string,
+    password: string,
+    metadata?: Record<string, unknown>
+  ) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: metadata ? { data: metadata } : undefined,
+      });
+
+      if (error) throw error;
+
+      return {
+        user: data.user ?? null,
+        session: data.session ?? null,
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
     setLoading(true);
     try {
@@ -75,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value = useMemo(
-    () => ({ user, session, loading, signIn, signOut }),
+    () => ({ user, session, loading, signIn, signUp, signOut }),
     [loading, session, user]
   );
 

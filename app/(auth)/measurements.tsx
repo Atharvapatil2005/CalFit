@@ -4,17 +4,16 @@ import { Text, Button, TextInput } from 'react-native-paper';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../src/constants/theme';
+import { useOnboarding } from '../../src/context/OnboardingContext';
 
 export default function MeasurementsScreen() {
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
-  const [age, setAge] = useState('');
+  const { state, updateState } = useOnboarding();
 
   const handleNext = () => {
     router.replace('/(auth)/nutrition');
   };
 
-  const isValid = Boolean(height.trim() && weight.trim() && age.trim());
+  const isValid = Boolean(state.height.trim() && state.weight.trim() && state.age.trim());
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -39,8 +38,8 @@ export default function MeasurementsScreen() {
               <Text variant="titleMedium" style={styles.label}>Height</Text>
               <TextInput
                 mode="outlined"
-                value={height}
-                onChangeText={setHeight}
+                value={state.height}
+                onChangeText={(value) => updateState({ height: value })}
                 keyboardType="numeric"
                 right={<TextInput.Affix text="cm" />}
                 style={styles.input}
@@ -51,8 +50,8 @@ export default function MeasurementsScreen() {
               <Text variant="titleMedium" style={styles.label}>Weight</Text>
               <TextInput
                 mode="outlined"
-                value={weight}
-                onChangeText={setWeight}
+                value={state.weight}
+                onChangeText={(value) => updateState({ weight: value })}
                 keyboardType="numeric"
                 right={<TextInput.Affix text="kg" />}
                 style={styles.input}
@@ -63,8 +62,8 @@ export default function MeasurementsScreen() {
               <Text variant="titleMedium" style={styles.label}>Age</Text>
               <TextInput
                 mode="outlined"
-                value={age}
-                onChangeText={setAge}
+                value={state.age}
+                onChangeText={(value) => updateState({ age: value })}
                 keyboardType="numeric"
                 right={<TextInput.Affix text="years" />}
                 style={styles.input}

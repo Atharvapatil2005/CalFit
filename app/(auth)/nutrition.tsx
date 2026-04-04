@@ -4,25 +4,25 @@ import { Text, Button, Chip } from 'react-native-paper';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../src/constants/theme';
-
-type DietaryPreference = 'none' | 'vegetarian' | 'vegan' | 'pescatarian';
-type DietaryRestriction = 'gluten' | 'dairy' | 'nuts' | 'eggs' | 'soy';
+import {
+  DietaryPreference,
+  DietaryRestriction,
+  useOnboarding,
+} from '../../src/context/OnboardingContext';
 
 export default function NutritionScreen() {
-  const [preference, setPreference] = useState<DietaryPreference>('none');
-  const [restrictions, setRestrictions] = useState<DietaryRestriction[]>([]);
+  const { state, updateState } = useOnboarding();
 
   const handleNext = () => {
-    // Here we would typically save all the onboarding data to the user's profile
-    router.replace('/(tabs)/dashboard');
+    router.replace('/(auth)/register');
   };
 
   const toggleRestriction = (restriction: DietaryRestriction) => {
-    setRestrictions(prev => 
-      prev.includes(restriction)
-        ? prev.filter(r => r !== restriction)
-        : [...prev, restriction]
-    );
+    const nextRestrictions = state.restrictions.includes(restriction)
+      ? state.restrictions.filter((item) => item !== restriction)
+      : [...state.restrictions, restriction];
+
+    updateState({ restrictions: nextRestrictions });
   };
 
   return (
@@ -48,29 +48,29 @@ export default function NutritionScreen() {
             </Text>
             <View style={styles.chipGroup}>
               <Chip
-                selected={preference === 'none'}
-                onPress={() => setPreference('none')}
+                selected={state.preference === 'none'}
+                onPress={() => updateState({ preference: 'none' })}
                 style={styles.chip}
               >
                 No specific diet
               </Chip>
               <Chip
-                selected={preference === 'vegetarian'}
-                onPress={() => setPreference('vegetarian')}
+                selected={state.preference === 'vegetarian'}
+                onPress={() => updateState({ preference: 'vegetarian' })}
                 style={styles.chip}
               >
                 Vegetarian
               </Chip>
               <Chip
-                selected={preference === 'vegan'}
-                onPress={() => setPreference('vegan')}
+                selected={state.preference === 'vegan'}
+                onPress={() => updateState({ preference: 'vegan' })}
                 style={styles.chip}
               >
                 Vegan
               </Chip>
               <Chip
-                selected={preference === 'pescatarian'}
-                onPress={() => setPreference('pescatarian')}
+                selected={state.preference === 'pescatarian'}
+                onPress={() => updateState({ preference: 'pescatarian' })}
                 style={styles.chip}
               >
                 Pescatarian
@@ -84,35 +84,35 @@ export default function NutritionScreen() {
             </Text>
             <View style={styles.chipGroup}>
               <Chip
-                selected={restrictions.includes('gluten')}
+                selected={state.restrictions.includes('gluten')}
                 onPress={() => toggleRestriction('gluten')}
                 style={styles.chip}
               >
                 Gluten-free
               </Chip>
               <Chip
-                selected={restrictions.includes('dairy')}
+                selected={state.restrictions.includes('dairy')}
                 onPress={() => toggleRestriction('dairy')}
                 style={styles.chip}
               >
                 Dairy-free
               </Chip>
               <Chip
-                selected={restrictions.includes('nuts')}
+                selected={state.restrictions.includes('nuts')}
                 onPress={() => toggleRestriction('nuts')}
                 style={styles.chip}
               >
                 Nut-free
               </Chip>
               <Chip
-                selected={restrictions.includes('eggs')}
+                selected={state.restrictions.includes('eggs')}
                 onPress={() => toggleRestriction('eggs')}
                 style={styles.chip}
               >
                 Egg-free
               </Chip>
               <Chip
-                selected={restrictions.includes('soy')}
+                selected={state.restrictions.includes('soy')}
                 onPress={() => toggleRestriction('soy')}
                 style={styles.chip}
               >

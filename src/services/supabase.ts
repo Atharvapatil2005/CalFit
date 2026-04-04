@@ -18,11 +18,36 @@ export type Meal = {
 
 export type MealInsert = Omit<Meal, 'id' | 'created_at'>;
 
+export type UserProfileInsert = {
+  id: string;
+  email: string;
+  full_name?: string | null;
+  gender?: 'male' | 'female' | null;
+  age?: number | null;
+  height?: number | null;
+  weight?: number | null;
+  health_goal?: 'lose_weight' | 'maintain_weight' | 'gain_weight' | null;
+  additional_goals?: string[] | null;
+  dietary_preference?: 'none' | 'vegetarian' | 'vegan' | 'pescatarian' | null;
+  dietary_restrictions?: string[] | null;
+};
+
 // Meal operations
 export const addMeal = async (meal: MealInsert) => {
   const { data, error } = await supabase
     .from('meals')
     .insert([meal])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const upsertProfile = async (profile: UserProfileInsert) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert(profile)
     .select()
     .single();
 

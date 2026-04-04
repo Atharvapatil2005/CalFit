@@ -15,6 +15,7 @@ export default function AuthLayout() {
       <Stack.Screen name="gender" />
       <Stack.Screen name="measurements" />
       <Stack.Screen name="nutrition" />
+      <Stack.Screen name="register" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="welcome" />
     </Stack>

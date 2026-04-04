@@ -5,14 +5,13 @@ import { router } from 'expo-router';
 import { theme } from '../../src/constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-type Gender = 'male' | 'female';
+import { Gender, useOnboarding } from '../../src/context/OnboardingContext';
 
 export default function GenderScreen() {
-  const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
+  const { state, updateState } = useOnboarding();
 
   const handleNext = () => {
-    router.push('/(auth)/measurements');
+    router.replace('/(auth)/measurements');
   };
 
   return (
@@ -37,19 +36,19 @@ export default function GenderScreen() {
                 key={gender.value}
                 style={[
                   styles.genderButton,
-                  selectedGender === gender.value && styles.selectedGender,
+                  state.gender === gender.value && styles.selectedGender,
                 ]}
-                onPress={() => setSelectedGender(gender.value as Gender)}
+                onPress={() => updateState({ gender: gender.value as Gender })}
               >
                 <MaterialCommunityIcons
                   name={gender.icon as any}
                   size={32}
-                  color={selectedGender === gender.value ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
+                  color={state.gender === gender.value ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
                 />
                 <Text
                   style={[
                     styles.genderText,
-                    selectedGender === gender.value && styles.selectedGenderText,
+                    state.gender === gender.value && styles.selectedGenderText,
                   ]}
                 >
                   {gender.label}
@@ -69,7 +68,7 @@ export default function GenderScreen() {
             <Button
               mode="contained"
               onPress={handleNext}
-              disabled={!selectedGender}
+              disabled={!state.gender}
               style={styles.button}
               contentStyle={styles.buttonContent}
             >

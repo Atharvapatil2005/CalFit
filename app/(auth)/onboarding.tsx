@@ -4,13 +4,10 @@ import { Text, Button } from 'react-native-paper';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../src/constants/theme';
-
-type Goal = 'lose_weight' | 'maintain_weight' | 'gain_weight';
-type AdditionalGoal = 'living_longer' | 'feeling_energized' | 'athletic_performance' | 'healthier_habits' | 'mindset' | 'prevent_diseases';
+import { Goal, AdditionalGoal, useOnboarding } from '../../src/context/OnboardingContext';
 
 export default function OnboardingScreen() {
-  const [primaryGoal, setPrimaryGoal] = useState<Goal | null>(null);
-  const [additionalGoals, setAdditionalGoals] = useState<Set<AdditionalGoal>>(new Set());
+  const { state, updateState } = useOnboarding();
 
   const goals: { value: Goal; label: string }[] = [
     { value: 'lose_weight', label: 'Lose weight' },
@@ -28,18 +25,16 @@ export default function OnboardingScreen() {
   ];
 
   const toggleAdditionalGoal = (goal: AdditionalGoal) => {
-    const newGoals = new Set(additionalGoals);
-    if (newGoals.has(goal)) {
-      newGoals.delete(goal);
-    } else {
-      newGoals.add(goal);
-    }
-    setAdditionalGoals(newGoals);
+    const nextGoals = state.additionalGoals.includes(goal)
+      ? state.additionalGoals.filter((item) => item !== goal)
+      : [...state.additionalGoals, goal];
+
+    updateState({ additionalGoals: nextGoals });
   };
 
   const handleNext = () => {
-    if (!primaryGoal) return;
-    router.push('/(auth)/gender');
+    if (!state.primaryGoal) return;
+    router.replace('/(auth)/gender');
   };
 
   return (
@@ -63,17 +58,17 @@ export default function OnboardingScreen() {
             <View style={styles.goalsContainer}>
               {goals.map((goal) => (
                 <Pressable
-                  key={goal.value}
-                  style={[
-                    styles.goalButton,
-                    primaryGoal === goal.value && styles.selectedGoal,
-                  ]}
-                  onPress={() => setPrimaryGoal(goal.value)}
-                >
+                key={goal.value}
+                style={[
+                  styles.goalButton,
+                  state.primaryGoal === goal.value && styles.selectedGoal,
+                ]}
+                onPress={() => updateState({ primaryGoal: goal.value })}
+              >
                   <Text
                     style={[
                       styles.goalText,
-                      primaryGoal === goal.value && styles.selectedGoalText,
+                      state.primaryGoal === goal.value && styles.selectedGoalText,
                     ]}
                   >
                     {goal.label}
@@ -90,17 +85,17 @@ export default function OnboardingScreen() {
             <View style={styles.goalsContainer}>
               {additionalGoalOptions.map((goal) => (
                 <Pressable
-                  key={goal.value}
-                  style={[
-                    styles.goalButton,
-                    additionalGoals.has(goal.value) && styles.selectedGoal,
-                  ]}
-                  onPress={() => toggleAdditionalGoal(goal.value)}
-                >
+                key={goal.value}
+                style={[
+                  styles.goalButton,
+                  state.additionalGoals.includes(goal.value) && styles.selectedGoal,
+                ]}
+                onPress={() => toggleAdditionalGoal(goal.value)}
+              >
                   <Text
                     style={[
                       styles.goalText,
-                      additionalGoals.has(goal.value) && styles.selectedGoalText,
+                      state.additionalGoals.includes(goal.value) && styles.selectedGoalText,
                     ]}
                   >
                     {goal.label}
@@ -117,7 +112,7 @@ export default function OnboardingScreen() {
             <Button
               mode="contained"
               onPress={handleNext}
-              disabled={!primaryGoal}
+              disabled={!state.primaryGoal}
               style={styles.button}
               contentStyle={styles.buttonContent}
             >
