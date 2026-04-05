@@ -1,5 +1,6 @@
 import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
+import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 // Types
@@ -32,6 +33,46 @@ export type UserProfileInsert = {
   dietary_restrictions?: string[] | null;
 };
 
+const PROFILE_WRITE_SESSION_ERROR =
+  'Your account was created, but your authenticated session was not ready to save your profile. Please sign in again to finish setup.';
+
+const buildProfileWriteError = (error: { code?: string; message: string }) => {
+  if (error.code === '42501') {
+    return new Error(
+      'Profile save was blocked by Supabase RLS. Confirm the `profiles` INSERT policy allows `auth.uid() = id`.'
+    );
+  }
+
+  return new Error(`Unable to save your profile: ${error.message}`);
+};
+
+const ensureProfileWriteSession = async (
+  expectedUserId: string,
+  session?: Session | null
+) => {
+  if (session?.access_token && session.refresh_token) {
+    const { error } = await supabase.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    });
+
+    if (error) {
+      throw new Error(PROFILE_WRITE_SESSION_ERROR);
+    }
+  }
+
+  const {
+    data: { session: activeSession },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error || !activeSession || activeSession.user.id !== expectedUserId) {
+    throw new Error(PROFILE_WRITE_SESSION_ERROR);
+  }
+
+  return activeSession;
+};
+
 // Meal operations
 export const addMeal = async (meal: MealInsert) => {
   const { data, error } = await supabase
@@ -44,14 +85,19 @@ export const addMeal = async (meal: MealInsert) => {
   return data;
 };
 
-export const upsertProfile = async (profile: UserProfileInsert) => {
+export const upsertProfile = async (
+  profile: UserProfileInsert,
+  session?: Session | null
+) => {
+  await ensureProfileWriteSession(profile.id, session);
+
   const { data, error } = await supabase
     .from('profiles')
-    .upsert(profile)
+    .upsert(profile, { onConflict: 'id' })
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) throw buildProfileWriteError(error);
   return data;
 };
 

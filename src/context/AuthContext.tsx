@@ -84,6 +84,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.user ?? data.session.user ?? null);
+      } else {
+        setUser(data.user ?? null);
+      }
+
       return {
         user: data.user ?? null,
         session: data.session ?? null,

@@ -76,8 +76,14 @@ export default function RegisterScreen() {
         throw new Error('We could not create your account.');
       }
 
-      if (session) {
-        await upsertProfile({
+      if (!session) {
+        throw new Error(
+          'Your account was created, but Supabase did not return an active session for profile setup. Check your email confirmation settings or sign in again to finish setup.'
+        );
+      }
+
+      await upsertProfile(
+        {
           id: user.id,
           email: user.email ?? email.trim(),
           gender: state.gender,
@@ -88,16 +94,12 @@ export default function RegisterScreen() {
           additional_goals: state.additionalGoals,
           dietary_preference: state.preference,
           dietary_restrictions: state.restrictions,
-        });
-
-        resetState();
-        router.replace('/(tabs)/dashboard');
-        return;
-      }
+        },
+        session
+      );
 
       resetState();
-      setInfo('Account created. Check your email to confirm your account, then log in.');
-      router.replace('/(auth)/login');
+      router.replace('/(tabs)/dashboard');
     } catch (signupError) {
       setError(signupError instanceof Error ? signupError.message : 'Unable to create your account.');
     } finally {
