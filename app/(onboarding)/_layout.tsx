@@ -28,20 +28,6 @@ export default function OnboardingLayout() {
           headerShown: false,
         }}
       />
-      <Stack.Screen
-        name="gender"
-        options={{
-          title: 'About You',
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="measurements"
-        options={{
-          title: 'Your Measurements',
-          headerShown: false,
-        }}
-      />
     </Stack>
   );
 } 

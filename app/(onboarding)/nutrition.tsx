@@ -7,7 +7,7 @@ export default function NutritionScreen() {
   const router = useRouter();
 
   const handleNext = () => {
-    router.push('/(onboarding)/gender');
+    router.push('/(auth)/onboarding');
   };
 
   return (

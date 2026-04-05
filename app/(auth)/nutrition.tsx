@@ -1,36 +1,41 @@
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Button, Chip } from 'react-native-paper';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../src/constants/theme';
 import {
-  DietaryPreference,
   DietaryRestriction,
   useOnboarding,
 } from '../../src/context/OnboardingContext';
 
 export default function NutritionScreen() {
   const { state, updateState } = useOnboarding();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-  const handleNext = () => {
-    router.replace('/(auth)/register');
-  };
+  const handleNext = useCallback(() => {
+    router.push('/(auth)/register');
+  }, [router]);
 
-  const toggleRestriction = (restriction: DietaryRestriction) => {
+  const toggleRestriction = useCallback((restriction: DietaryRestriction) => {
     const nextRestrictions = state.restrictions.includes(restriction)
       ? state.restrictions.filter((item) => item !== restriction)
       : [...state.restrictions, restriction];
 
     updateState({ restrictions: nextRestrictions });
-  };
+  }, [state.restrictions, updateState]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: 24 + insets.bottom },
+        ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.inner}>
           <View style={styles.header}>

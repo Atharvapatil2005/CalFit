@@ -1,22 +1,47 @@
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { Text, Button } from 'react-native-paper';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { theme } from '../../src/constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gender, useOnboarding } from '../../src/context/OnboardingContext';
 
 export default function GenderScreen() {
   const { state, updateState } = useOnboarding();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-  const handleNext = () => {
-    router.replace('/(auth)/measurements');
-  };
+  const navigateToMeasurements = useCallback(() => {
+    router.push('/(auth)/measurements');
+  }, [router]);
+
+  const handleSelectGender = useCallback((gender: Gender) => {
+    updateState({ gender });
+
+    requestAnimationFrame(() => {
+      navigateToMeasurements();
+    });
+  }, [navigateToMeasurements, updateState]);
+
+  const handleNext = useCallback(() => {
+    if (!state.gender) {
+      return;
+    }
+
+    navigateToMeasurements();
+  }, [navigateToMeasurements, state.gender]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: 24 + insets.bottom },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.inner}>
           <View style={styles.header}>
             <Text variant="headlineMedium" style={styles.title}>
@@ -38,7 +63,7 @@ export default function GenderScreen() {
                   styles.genderButton,
                   state.gender === gender.value && styles.selectedGender,
                 ]}
-                onPress={() => updateState({ gender: gender.value as Gender })}
+                onPress={() => handleSelectGender(gender.value as Gender)}
               >
                 <MaterialCommunityIcons
                   name={gender.icon as any}
@@ -122,6 +147,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     gap: 12,
+    minHeight: 120,
   },
   selectedGender: {
     backgroundColor: theme.colors.primary,

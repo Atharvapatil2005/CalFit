@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 export type Goal = 'lose_weight' | 'maintain_weight' | 'gain_weight';
 export type AdditionalGoal =
@@ -45,17 +45,17 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(undef
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<OnboardingState>(initialState);
 
-  const updateState = (updates: Partial<OnboardingState>) => {
+  const updateState = useCallback((updates: Partial<OnboardingState>) => {
     setState((prev) => ({ ...prev, ...updates }));
-  };
+  }, []);
 
-  const resetState = () => {
+  const resetState = useCallback(() => {
     setState(initialState);
-  };
+  }, []);
 
   const value = useMemo(
     () => ({ state, updateState, resetState }),
-    [state]
+    [resetState, state, updateState]
   );
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;

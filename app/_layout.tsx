@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Stack, router, useSegments } from 'expo-router';
 import { PaperProvider, Text } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { theme } from '../src/constants/theme';
 import { AuthProvider } from '../src/context/AuthContext';
 import { useAuth } from '../src/context/AuthContext';
@@ -19,8 +20,10 @@ function RootLayoutNav() {
     const inAuthGroup = segments[0] === '(auth)';
     const inTabsGroup = segments[0] === '(tabs)';
     const isCallbackRoute = segments[0] === 'login-callback';
+    const currentLeafSegment = segments[segments.length - 1];
+    const inRegisterRoute = inAuthGroup && currentLeafSegment === 'register';
 
-    if (user && !inTabsGroup) {
+    if (user && !inTabsGroup && !isCallbackRoute && !inRegisterRoute) {
       router.replace('/(tabs)/dashboard');
     } else if (!user && !inAuthGroup && !isCallbackRoute) {
       router.replace('/(auth)/login');
@@ -71,13 +74,15 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <PaperProvider theme={theme}>
-      <AuthProvider>
-        <OnboardingProvider>
-          <RootLayoutNav />
-        </OnboardingProvider>
-      </AuthProvider>
-    </PaperProvider>
+    <SafeAreaProvider>
+      <PaperProvider theme={theme}>
+        <AuthProvider>
+          <OnboardingProvider>
+            <RootLayoutNav />
+          </OnboardingProvider>
+        </AuthProvider>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
 
