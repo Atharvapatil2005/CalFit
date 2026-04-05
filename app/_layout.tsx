@@ -1,8 +1,10 @@
+import 'react-native-gesture-handler';
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Stack, router, useSegments } from 'expo-router';
 import { PaperProvider, Text } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { theme } from '../src/constants/theme';
 import { AuthProvider } from '../src/context/AuthContext';
 import { useAuth } from '../src/context/AuthContext';
@@ -74,19 +76,24 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <PaperProvider theme={theme}>
-        <AuthProvider>
-          <OnboardingProvider>
-            <RootLayoutNav />
-          </OnboardingProvider>
-        </AuthProvider>
-      </PaperProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.appRoot}>
+      <SafeAreaProvider>
+        <PaperProvider theme={theme}>
+          <AuthProvider>
+            <OnboardingProvider>
+              <RootLayoutNav />
+            </OnboardingProvider>
+          </AuthProvider>
+        </PaperProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
+  appRoot: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.colors.primary,
