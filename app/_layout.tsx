@@ -10,7 +10,7 @@ import { AuthProvider } from '../src/context/AuthContext';
 import { useAuth } from '../src/context/AuthContext';
 import { OnboardingProvider } from '../src/context/OnboardingContext';
 
-function RootLayoutNav() {
+function AppNavigator() {
   const { user, loading } = useAuth();
   const segments = useSegments();
 
@@ -42,51 +42,59 @@ function RootLayoutNav() {
   }
 
   return (
-      <Stack>
-        <Stack.Screen
-          name="(auth)"
-          options={{
-            headerShown: false,
-            animation: 'fade'
-          }}
-        />
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-            animation: 'fade'
-          }}
-        />
-        <Stack.Screen
-          name="login-callback"
-          options={{
-            headerShown: false,
-            animation: 'fade'
-          }}
-        />
-        <Stack.Screen
-          name="meals/add"
-          options={{
-            headerShown: true
-          }}
-        />
-      </Stack>
+    <Stack>
+      <Stack.Screen
+        name="(auth)"
+        options={{
+          headerShown: false,
+          animation: 'fade'
+        }}
+      />
+      <Stack.Screen
+        name="(tabs)"
+        options={{
+          headerShown: false,
+          animation: 'fade'
+        }}
+      />
+      <Stack.Screen
+        name="login-callback"
+        options={{
+          headerShown: false,
+          animation: 'fade'
+        }}
+      />
+      <Stack.Screen
+        name="meals/add"
+        options={{
+          headerShown: true
+        }}
+      />
+    </Stack>
+  );
+}
+
+function AppProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <GestureHandlerRootView style={styles.appRoot}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <OnboardingProvider>
+            <PaperProvider theme={theme}>
+              {children}
+            </PaperProvider>
+          </OnboardingProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={styles.appRoot}>
-      <SafeAreaProvider>
-        <PaperProvider theme={theme}>
-          <AuthProvider>
-            <OnboardingProvider>
-              <RootLayoutNav />
-            </OnboardingProvider>
-          </AuthProvider>
-        </PaperProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <AppProviders>
+      <AppNavigator />
+    </AppProviders>
   );
 }
 
