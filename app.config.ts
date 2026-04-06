@@ -45,7 +45,7 @@ export default function appConfig() {
     scheme: 'calfit',
     owner: 'atharvapatil',
     runtimeVersion: '1.0.0',
-    newArchEnabled: true,
+    newArchEnabled: false,
     extra: {
       eas: {
         projectId: process.env.EAS_PROJECT_ID,
