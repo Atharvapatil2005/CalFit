@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+import { AuthError, Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 type AuthContextType = {
@@ -16,6 +16,22 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const getReadableAuthError = (error: unknown) => {
+  if (error instanceof AuthError) {
+    if (error.code === 'email_provider_disabled') {
+      return 'Email/password signup is disabled in the connected Supabase project. Enable the Email provider in Supabase Auth settings for this new project.';
+    }
+
+    return error.message;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return 'Authentication failed.';
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -82,13 +98,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: metadata ? { data: metadata } : undefined,
       });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(getReadableAuthError(error));
+      }
 
       if (data.session) {
         setSession(data.session);
         setUser(data.user ?? data.session.user ?? null);
-      } else {
-        setUser(data.user ?? null);
       }
 
       return {

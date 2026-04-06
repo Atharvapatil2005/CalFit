@@ -78,7 +78,7 @@ export default function RegisterScreen() {
 
       if (!session) {
         throw new Error(
-          'Your account was created, but Supabase did not return an active session for profile setup. Check your email confirmation settings or sign in again to finish setup.'
+          'Your account was created, but Supabase did not return an active session. Disable email confirmation for immediate signup, or ask the user to confirm their email and then sign in before profile setup.'
         );
       }
 
@@ -102,6 +102,7 @@ export default function RegisterScreen() {
       router.replace('/(tabs)/dashboard');
     } catch (signupError) {
       setError(signupError instanceof Error ? signupError.message : 'Unable to create your account.');
+      setInfo('');
     } finally {
       setLoading(false);
     }

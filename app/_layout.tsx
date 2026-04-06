@@ -11,7 +11,7 @@ import { useAuth } from '../src/context/AuthContext';
 import { OnboardingProvider } from '../src/context/OnboardingContext';
 
 function AppNavigator() {
-  const { user, loading } = useAuth();
+  const { session, loading } = useAuth();
   const segments = useSegments();
 
   useEffect(() => {
@@ -25,12 +25,14 @@ function AppNavigator() {
     const currentLeafSegment = segments[segments.length - 1];
     const inRegisterRoute = inAuthGroup && currentLeafSegment === 'register';
 
-    if (user && !inTabsGroup && !isCallbackRoute && !inRegisterRoute) {
+    const hasActiveSession = Boolean(session?.access_token);
+
+    if (hasActiveSession && !inTabsGroup && !isCallbackRoute && !inRegisterRoute) {
       router.replace('/(tabs)/dashboard');
-    } else if (!user && !inAuthGroup && !isCallbackRoute) {
+    } else if (!hasActiveSession && !inAuthGroup && !isCallbackRoute) {
       router.replace('/(auth)/login');
     }
-  }, [loading, segments, user]);
+  }, [loading, segments, session]);
 
   if (loading) {
     return (
