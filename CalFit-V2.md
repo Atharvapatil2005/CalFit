@@ -52,6 +52,16 @@
   Git commit message: `fix: align oauth redirect uri and login callback route`
   Rollback plan: Disable Google sign-in button and keep email/password auth only
 
+- [x] Stabilize email/password auth and onboarding register handoff
+  Severity: P0
+  Why it broke production: Signup, profile persistence, and root auth redirects were racing each other, and new Supabase project settings could fail signup before auth user creation.
+  Exact files affected: `src/context/AuthContext.tsx`, `src/services/supabase.ts`, `app/_layout.tsx`, `app/(auth)/register.tsx`, `app/(auth)/onboarding.tsx`, `app/(auth)/gender.tsx`, `app/(auth)/measurements.tsx`, `app/(auth)/nutrition.tsx`
+  Database migration needed? No frontend migration; Supabase Auth Email provider must be enabled in the active project for signup to work
+  Security impact: Medium
+  QA test steps: Log in with an existing account; verify session restore after cold start; complete `onboarding -> gender -> measurements -> nutrition -> register`; verify auth user is created, profile row is written, and dashboard opens only after success; disable Supabase Email provider and verify register stays on-screen with a visible error
+  Git commit message: `fix: stabilize auth signup and onboarding dashboard handoff`
+  Rollback plan: Keep login-only access enabled and hide register CTA until Supabase project auth settings are corrected
+
 - [x] Remove exposed API keys from client-side
   Severity: P0
   Why it breaks production: OpenRouter and Nutritionix keys are shipped in the app bundle and can be extracted and abused.
@@ -74,15 +84,15 @@
 
 ## P1 - Product correctness
 
-- [ ] Create `public.profiles` table and profile sync flow
+- [x] Create `public.profiles` table and profile sync flow
   Severity: P1
-  Why it breaks production: User attributes for onboarding, goals, and personalization are not persisted anywhere durable.
-  Exact files affected: New migration under `supabase/migrations` or SQL source replacing `docs/supabase_setup.sql`, `app/(auth)/profile.tsx`, `app/(auth)/gender.tsx`, `app/(auth)/measurements.tsx`, `app/(auth)/nutrition.tsx`, `src/types/auth.ts`
-  Database migration needed? Yes
-  Security impact: Medium, introduces health-adjacent PII that must be protected by RLS
-  QA test steps: Complete onboarding; verify profile row created/updated; verify user can only read own profile; verify relaunch restores profile-driven UI
+  Why it broke production: User attributes for onboarding, goals, and personalization were not persisted durably, and signup-to-profile persistence needed an authenticated-session-safe handoff.
+  Exact files affected: `supabase/migrations/20260404_create_profiles.sql`, `docs/supabase_setup.sql`, `src/services/supabase.ts`, `src/context/AuthContext.tsx`, `app/(auth)/register.tsx`, `app/(auth)/gender.tsx`, `app/(auth)/measurements.tsx`, `app/(auth)/nutrition.tsx`
+  Database migration needed? Yes, already added under `supabase/migrations`
+  Security impact: Medium, stores health-adjacent PII behind RLS on `public.profiles`
+  QA test steps: Complete onboarding and register on a Supabase project with Email auth enabled; verify `auth.users.id = public.profiles.id`; verify profile row contains onboarding fields; verify user can only read/update own profile; verify relaunch restores signed-in state
   Git commit message: `feat: add profiles table and persist onboarding profile data`
-  Rollback plan: Keep UI fields local-only and hide personalized summaries
+  Rollback plan: Keep onboarding local-only and block register-to-dashboard handoff if profile persistence regresses
 
 - [ ] Create `public.daily_goals` table
   Severity: P1
@@ -288,7 +298,9 @@
 
 ## QA master checklist
 
-- [ ] Test email/password auth flow: login, invalid credentials, sign out, session persistence, expired session recovery
+- [x] Test email/password auth flow: login, invalid credentials, sign out, session persistence, expired session recovery
+- [x] Test onboarding register flow: `onboarding -> gender -> measurements -> nutrition -> register -> dashboard`
+- [x] Verify register failure handling keeps the user on register with a visible error when Supabase Auth Email provider is disabled or signup returns no active session
 - [ ] Test meal insert/delete flow on real user accounts using `public.meals`
 - [ ] Validate RLS on `public.meals`, `public.profiles`, `public.daily_goals`, `public.chat_sessions`, and `public.chat_messages`
 - [ ] Test Android keyboard behavior on login, meals modal/add screen, and chat input
