@@ -48,9 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   scheme: 'calfit',
   owner: 'atharvapatil',
-  runtimeVersion: {
-    policy: 'appVersion'
-  },
+  runtimeVersion: "1.0.0",
   newArchEnabled: true,
   extra: {
     eas: {
