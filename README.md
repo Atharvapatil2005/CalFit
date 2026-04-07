@@ -26,6 +26,17 @@ Install the latest preview build directly on your Android device:
 
 ---
 
+## Screenshots
+
+| | | |
+|---|---|---|
+| ![Dashboard](docs/screenshots/Screenshot%202026-04-07%20at%2010.58.30%20AM.png) | ![Meals](docs/screenshots/Screenshot%202026-04-07%20at%2010.58.48%20AM.png) | ![Add Meal](docs/screenshots/Screenshot%202026-04-07%20at%2010.58.52%20AM.png) |
+| Dashboard | Meals | Add Meal |
+| ![Chat](docs/screenshots/Screenshot%202026-04-07%20at%2010.58.56%20AM.png) | ![Profile](docs/screenshots/Screenshot%202026-04-07%20at%2010.58.58%20AM.png) | |
+| AI Chat | Profile | |
+
+---
+
 ## Tech Stack
 
 | Category | Technology |
