@@ -19,40 +19,53 @@ export default function appConfig() {
     version: '1.0.0',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
-    icon: './assets/icon.png',
+
+    // ✅ temporary remote icon
+    icon: 'https://via.placeholder.com/1024.png?text=CF',
+
     assetBundlePatterns: ['**/*'],
+
     ios: {
       supportsTablet: true,
-      icon: './assets/icon.png',
+      icon: 'https://via.placeholder.com/1024.png?text=CF',
       bundleIdentifier: 'com.atharvapatil.calfit',
     },
+
     android: {
       package: 'com.atharvapatil.calfit',
       adaptiveIcon: {
-        foregroundImage: './assets/adaptive-icon.png',
+        foregroundImage: 'https://via.placeholder.com/1024.png?text=CF',
         backgroundColor: '#4CAF50',
       },
     },
+
     splash: {
-      image: './assets/splash.png',
+      image: 'https://via.placeholder.com/1024.png?text=CF',
       resizeMode: 'contain',
       backgroundColor: '#ffffff',
     },
+
     web: {
-      favicon: './assets/favicon.png',
+      favicon: 'https://via.placeholder.com/48.png?text=CF',
     },
+
     plugins: ['expo-router'],
     scheme: 'calfit',
     owner: 'atharvapatil',
     runtimeVersion: '1.0.0',
+
+    // ✅ keep new architecture ON
     newArchEnabled: true,
+
     extra: {
       eas: {
         projectId: process.env.EAS_PROJECT_ID,
       },
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-      aiModel: process.env.EXPO_PUBLIC_AI_MODEL || 'microsoft/phi-4-reasoning-plus:free',
+      aiModel:
+        process.env.EXPO_PUBLIC_AI_MODEL ||
+        'microsoft/phi-4-reasoning-plus:free',
     },
   };
 }
