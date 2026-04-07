@@ -1,88 +1,138 @@
 # CalFit
 
+AI-powered calorie tracking and nutrition monitoring for iOS and Android.
 
+---
 
-CalFit is an AI-powered calorie tracker designed to help users achieve their health goals. The app provides meal suggestions, calorie tracking, and an AI-integrated meal scanner for seamless nutrition monitoring.
+## Download
+
+### Android APK
+Install the latest preview build directly on your Android device:
+
+[Download CalFit APK](https://expo.dev/accounts/atharvapatil/projects/calfit/builds/e7cd4b98-7ddd-4a6e-b1d6-9d42ff7097d3)
+
+---
 
 ## Features
 
-- **AI-Powered Chat Assistant**: Get personalized meal suggestions and nutrition advice
-- **Meal Tracker**: Log meals and track macros (protein, carbs, fats, fiber)
-- **Progress Tracking**: Visual representation of daily calorie and protein goals
-- **User Profile**: Customize your health goals and activity level
+| Feature | Description |
+|---------|-------------|
+| **AI Assistant** | Chat with an AI nutritionist for personalized meal suggestions |
+| **Meal Logging** | Log meals and track macros (protein, carbs, fats, fiber) |
+| **Calorie Tracking** | Visual progress toward daily calorie and protein goals |
+| **User Profile** | Customize health goals, activity level, and dietary preferences |
+| **Cloud Sync** | Meal data synced across devices via Supabase |
+| **Authentication** | Secure email/password login with Supabase Auth |
 
-## Getting Started
+---
 
-### Prerequisites
+## Tech Stack
 
-- Node.js (v14 or later)
-- npm or yarn
-- Expo CLI
+| Category | Technology |
+|----------|------------|
+| Framework | React Native + Expo SDK 54 |
+| Routing | Expo Router |
+| Language | TypeScript |
+| UI Components | React Native Paper (Material Design 3) |
+| Backend | Supabase (PostgreSQL + Auth) |
+| AI | DeepSeek (via OpenRouter API) |
+| Build | EAS Build (New Architecture enabled) |
 
-### Installation
-
-1. Clone the repository
-   ```
-   git clone https://github.com/yourusername/calfit.git
-   cd calfit
-   ```
-
-2. Install dependencies
-   ```
-   npm install
-   ```
-
-3. Set up environment variables
-   - Create a `.env` file in the root directory
-   - Add your Supabase credentials:
-     ```
-     SUPABASE_URL=https://your-project-id.supabase.co
-     SUPABASE_ANON_KEY=your-supabase-anon-key
-     EAS_PROJECT_ID=your-eas-project-id
-     ```
-
-4. Start the development server
-   ```
-   npm start
-   ```
-
-5. Run on your device or emulator
-   - Press `i` for iOS
-   - Press `a` for Android
-   - Press `w` for web
+---
 
 ## Project Structure
 
 ```
 calfit/
-├── app/                      # Expo Router app directory
-│   ├── (auth)/              # Authentication routes
+├── app/                    # Expo Router pages
+│   ├── (auth)/           # Authentication flows
 │   │   ├── login.tsx
-│   │   └── register.tsx
-│   ├── (tabs)/              # Main app tabs
+│   │   ├── register.tsx
+│   │   └── ...
+│   ├── (tabs)/           # Main app tabs
 │   │   ├── dashboard.tsx
 │   │   ├── meals.tsx
 │   │   ├── chat.tsx
 │   │   └── profile.tsx
-│   └── _layout.tsx          # Root layout
+│   └── _layout.tsx       # Root layout
 ├── src/
-│   ├── components/          # Reusable components
-│   ├── hooks/              # Custom React hooks
-│   ├── services/           # API and external services
-│   ├── utils/              # Helper functions
-│   ├── constants/          # App constants
-│   └── types/              # TypeScript types
-├── assets/                 # Static assets
-└── docs/                   # Documentation
+│   ├── components/        # Reusable UI components
+│   ├── constants/         # Theme and app constants
+│   ├── context/           # React context providers
+│   ├── lib/               # Third-party client setup
+│   ├── services/          # API integration layer
+│   └── types/             # TypeScript type definitions
+├── assets/                 # Icons and images
+└── android/               # Native Android project
 ```
 
-## Tech Stack
+---
 
-- **Frontend**: React Native with TypeScript, Expo, and Expo Router
-- **Backend/Database**: Supabase
-- **UI Framework**: React Native Paper
-- **AI Processing**: DeepSeek
+## Local Development
+
+### Prerequisites
+
+- Node.js 18+
+- npm 9+ or yarn
+- Expo CLI (`npx expo`)
+- Android Studio (for Android emulator)
+- Xcode (for iOS simulator, macOS only)
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/atharvapatil/CalFit.git
+cd CalFit
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+```
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+EAS_PROJECT_ID=your-eas-project-id
+```
+
+### Running the App
+
+```bash
+npm start          # Start Metro bundler
+
+# In another terminal:
+npm run android   # Run on Android emulator/device
+npm run ios        # Run on iOS simulator (macOS only)
+```
+
+---
+
+## Building
+
+### Android APK (EAS)
+
+```bash
+# Preview build (APK)
+eas build --platform android --profile preview
+
+# Production build (AAB)
+eas build --platform android --profile production
+```
+
+### Requirements
+
+- [EAS CLI](https://docs.expo.dev/build/eas-json/): `npm install -g eas-cli`
+- EAS account linked to your Expo project
+
+---
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+MIT License - see [LICENSE](LICENSE) for details.
