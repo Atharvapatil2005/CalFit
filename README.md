@@ -30,9 +30,9 @@ Install the latest preview build directly on your Android device:
 
 | | | |
 |---|---|---|
-| ![Dashboard](docs/screenshots/Screenshot%202026-04-07%20at%2010.58.30%20AM.png) | ![Meals](docs/screenshots/Screenshot%202026-04-07%20at%2010.58.48%20AM.png) | ![Add Meal](docs/screenshots/Screenshot%202026-04-07%20at%2010.58.52%20AM.png) |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Meals](docs/screenshots/meals.png) | ![Add Meal](docs/screenshots/add-meal.png) |
 | Dashboard | Meals | Add Meal |
-| ![Chat](docs/screenshots/Screenshot%202026-04-07%20at%2010.58.56%20AM.png) | ![Profile](docs/screenshots/Screenshot%202026-04-07%20at%2010.58.58%20AM.png) | |
+| ![Chat](docs/screenshots/chat.png) | ![Profile](docs/screenshots/profile.png) | |
 | AI Chat | Profile | |
 
 ---
