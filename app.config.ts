@@ -20,33 +20,33 @@ export default function appConfig() {
     orientation: 'portrait',
     userInterfaceStyle: 'light',
 
-    // ✅ temporary remote icon
-    icon: 'https://via.placeholder.com/1024.png?text=CF',
+    // ✅ use fresh verified local PNGs
+    icon: './assets/icon.png',
 
     assetBundlePatterns: ['**/*'],
 
     ios: {
       supportsTablet: true,
-      icon: 'https://via.placeholder.com/1024.png?text=CF',
+      icon: './assets/icon.png',
       bundleIdentifier: 'com.atharvapatil.calfit',
     },
 
     android: {
       package: 'com.atharvapatil.calfit',
       adaptiveIcon: {
-        foregroundImage: 'https://via.placeholder.com/1024.png?text=CF',
+        foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#4CAF50',
       },
     },
 
     splash: {
-      image: 'https://via.placeholder.com/1024.png?text=CF',
+      image: './assets/splash.png',
       resizeMode: 'contain',
       backgroundColor: '#ffffff',
     },
 
     web: {
-      favicon: 'https://via.placeholder.com/48.png?text=CF',
+      favicon: './assets/favicon.png',
     },
 
     plugins: ['expo-router'],
@@ -54,7 +54,7 @@ export default function appConfig() {
     owner: 'atharvapatil',
     runtimeVersion: '1.0.0',
 
-    // ✅ keep new architecture ON
+    // ✅ required for reanimated/worklets on SDK 54
     newArchEnabled: true,
 
     extra: {
