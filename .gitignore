@@ -52,3 +52,4 @@ yarn-error.*
 android/app/build/
 ios/build/
 build/
+.expo/
