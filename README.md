@@ -139,6 +139,7 @@ eas build --platform android --profile production
 
 ### Requirements
 
+
 - [EAS CLI](https://docs.expo.dev/build/eas-json/): `npm install -g eas-cli`
 - EAS account linked to your Expo project
 
