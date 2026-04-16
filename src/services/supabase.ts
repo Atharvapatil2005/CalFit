@@ -31,6 +31,7 @@ export type UserProfileInsert = {
   additional_goals?: string[] | null;
   dietary_preference?: 'none' | 'vegetarian' | 'vegan' | 'pescatarian' | null;
   dietary_restrictions?: string[] | null;
+  target_calories?: number | null;
 };
 
 const PROFILE_WRITE_SESSION_ERROR =

@@ -9,6 +9,7 @@ export type AdditionalGoal =
   | 'mindset'
   | 'prevent_diseases';
 export type Gender = 'male' | 'female';
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active';
 export type DietaryPreference = 'none' | 'vegetarian' | 'vegan' | 'pescatarian';
 export type DietaryRestriction = 'gluten' | 'dairy' | 'nuts' | 'eggs' | 'soy';
 
@@ -16,6 +17,7 @@ export type OnboardingState = {
   primaryGoal: Goal | null;
   additionalGoals: AdditionalGoal[];
   gender: Gender | null;
+  activityLevel: ActivityLevel;
   height: string;
   weight: string;
   age: string;
@@ -27,6 +29,7 @@ const initialState: OnboardingState = {
   primaryGoal: null,
   additionalGoals: [],
   gender: null,
+  activityLevel: 'moderate',
   height: '',
   weight: '',
   age: '',

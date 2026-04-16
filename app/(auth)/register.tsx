@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { Alert, View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/context/AuthContext';
 import { useOnboarding } from '../../src/context/OnboardingContext';
 import { theme } from '../../src/constants/theme';
+import { calculateCalories } from '../../src/lib/calorieCalculator';
 import { upsertProfile } from '../../src/services/supabase';
 
 export default function RegisterScreen() {
@@ -19,6 +20,13 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+
+  const activityMultipliers = {
+    sedentary: 1.2,
+    light: 1.375,
+    moderate: 1.55,
+    active: 1.725,
+  } as const;
 
   const hasGoal = Boolean(state.primaryGoal);
   const hasGender = Boolean(state.gender);
@@ -60,6 +68,33 @@ export default function RegisterScreen() {
       return;
     }
 
+    const age = Number(state.age);
+    const height = Number(state.height);
+    const weight = Number(state.weight);
+
+    if (
+      !state.gender ||
+      !state.primaryGoal ||
+      !Number.isFinite(age) ||
+      !Number.isFinite(height) ||
+      !Number.isFinite(weight) ||
+      age <= 0 ||
+      height <= 0 ||
+      weight <= 0
+    ) {
+      setError('Enter valid age, height, and weight before creating your account.');
+      return;
+    }
+
+    const targetCalories = calculateCalories({
+      age,
+      height,
+      weight,
+      gender: state.gender,
+      activityMultiplier: activityMultipliers[state.activityLevel],
+      goal: state.primaryGoal,
+    });
+
     try {
       setLoading(true);
       setError('');
@@ -87,17 +122,20 @@ export default function RegisterScreen() {
           id: user.id,
           email: user.email ?? email.trim(),
           gender: state.gender,
-          age: state.age ? Number(state.age) : null,
-          height: state.height ? Number(state.height) : null,
-          weight: state.weight ? Number(state.weight) : null,
+          age,
+          height,
+          weight,
           health_goal: state.primaryGoal,
           additional_goals: state.additionalGoals,
           dietary_preference: state.preference,
           dietary_restrictions: state.restrictions,
+          target_calories: targetCalories,
         },
         session
       );
 
+      setInfo(`Your daily calorie target is ${targetCalories} kcal`);
+      Alert.alert('Profile saved', `Your daily calorie target is ${targetCalories} kcal`);
       resetState();
       router.replace('/(tabs)/dashboard');
     } catch (signupError) {
