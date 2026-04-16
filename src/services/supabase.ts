@@ -61,12 +61,24 @@ const ensureProfileWriteSession = async (
     }
   }
 
-  const {
-    data: { session: activeSession },
-    error,
-  } = await supabase.auth.getSession();
+  let activeSession: Session | null = null;
 
-  if (error || !activeSession || activeSession.user.id !== expectedUserId) {
+  try {
+    const {
+      data: { session: nextSession },
+      error,
+    } = await supabase.auth.getSession();
+
+    if (error) {
+      throw error;
+    }
+
+    activeSession = nextSession;
+  } catch {
+    throw new Error(PROFILE_WRITE_SESSION_ERROR);
+  }
+
+  if (!activeSession || activeSession.user.id !== expectedUserId) {
     throw new Error(PROFILE_WRITE_SESSION_ERROR);
   }
 

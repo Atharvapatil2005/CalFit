@@ -24,6 +24,8 @@ export default function ChatScreen() {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const requestInFlightRef = useRef(false);
+  const lastFailedMessageRef = useRef('');
 
   useEffect(() => {
     scrollToBottom();
@@ -34,11 +36,13 @@ export default function ChatScreen() {
   };
 
   const handleSend = async () => {
-    if (!message.trim() || isLoading) return;
+    const trimmedMessage = message.trim();
+
+    if (!trimmedMessage || isLoading || requestInFlightRef.current) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: message,
+      text: trimmedMessage,
       isUser: true,
       timestamp: new Date(),
     };
@@ -46,10 +50,11 @@ export default function ChatScreen() {
     setMessages((prev) => [...prev, userMessage]);
     setMessage('');
     setIsLoading(true);
+    requestInFlightRef.current = true;
 
     try {
       const aiResponse = await sendMessage([
-        { role: 'user', content: message },
+        { role: 'user', content: trimmedMessage },
       ]);
 
       const aiMessage: Message = {
@@ -60,17 +65,29 @@ export default function ChatScreen() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+      lastFailedMessageRef.current = '';
     } catch (error) {
-      console.error('Chat Error:', error);
+      const errorText =
+        error instanceof Error
+          ? error.message
+          : 'I’m having trouble connecting to the AI service right now.';
+
+      if (lastFailedMessageRef.current === trimmedMessage) {
+        return;
+      }
+
+      lastFailedMessageRef.current = trimmedMessage;
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I'm having trouble connecting to the AI service. Please check your internet connection and try again. If the problem persists, you may need to verify your API key.",
+        text: errorText,
         isUser: false,
         timestamp: new Date(),
         error: true,
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
+      requestInFlightRef.current = false;
       setIsLoading(false);
     }
   };

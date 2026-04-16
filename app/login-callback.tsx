@@ -7,18 +7,39 @@ export default function LoginCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
+    let isMounted = true;
 
-      if (data?.session) {
-        router.replace('/(tabs)/dashboard');
-      } else {
+    const getSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (!error && data?.session) {
+          router.replace('/(tabs)/dashboard');
+          return;
+        }
+      } catch {
+        try {
+          await supabase.auth.signOut({ scope: 'local' });
+        } catch {
+          // Ignore local cleanup failures on callback recovery.
+        }
+      }
+
+      if (isMounted) {
         router.replace('/(auth)/login');
       }
     };
 
     getSession();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

@@ -1,46 +1,64 @@
-import Constants from 'expo-constants';
 import { AI_CONFIG } from '../config/ai';
+import { fetchWithTimeout, HttpError, NetworkError, readResponsePayload } from '../lib/http';
+import { assertBackendConfig, runtimeConfig } from '../lib/runtimeConfig';
 
 type Message = {
   role: 'user' | 'assistant' | 'system';
   content: string;
 };
 
-const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
-const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
-const aiModel = Constants.expoConfig?.extra?.aiModel || AI_CONFIG.model;
+const aiModel = runtimeConfig.aiModel || AI_CONFIG.model;
 
 export const sendMessage = async (messages: Message[]) => {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('AI assistant is unavailable because the backend is not configured.');
-  }
+  const { supabaseUrl, supabaseAnonKey } = assertBackendConfig();
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/ai-chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${supabaseAnonKey}`,
+  const response = await fetchWithTimeout(
+    `${supabaseUrl}/functions/v1/ai-chat`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({
+        model: aiModel,
+        messages: [
+          { role: 'system', content: AI_CONFIG.systemPrompt },
+          ...messages,
+        ],
+        temperature: AI_CONFIG.temperature,
+        max_tokens: AI_CONFIG.maxTokens,
+      }),
     },
-    body: JSON.stringify({
-      model: aiModel,
-      messages: [
-        { role: 'system', content: AI_CONFIG.systemPrompt },
-        ...messages,
-      ],
-      temperature: AI_CONFIG.temperature,
-      max_tokens: AI_CONFIG.maxTokens,
-    }),
-  });
+    20000
+  );
+
+  const { json, text } = await readResponsePayload(response);
 
   if (!response.ok) {
-    throw new Error('AI assistant is temporarily unavailable. Deploy the `ai-chat` Edge Function to enable chat.');
+    const message =
+      (json?.error as string | undefined) ||
+      text ||
+      'AI assistant is temporarily unavailable.';
+
+    if (response.status === 404) {
+      throw new HttpError(
+        'AI assistant is temporarily unavailable because the ai-chat backend route was not found.',
+        response.status,
+        text
+      );
+    }
+
+    throw new HttpError(message, response.status, text);
   }
 
-  const data = await response.json();
+  const choices = Array.isArray((json as { choices?: unknown[] }).choices)
+    ? ((json as { choices: Array<{ message?: { content?: string } }> }).choices)
+    : [];
 
-  if (!data.choices?.[0]?.message?.content) {
+  if (!choices[0]?.message?.content) {
     throw new Error('Invalid AI response format');
   }
 
-  return data.choices[0].message.content;
+  return String(choices[0].message.content);
 };

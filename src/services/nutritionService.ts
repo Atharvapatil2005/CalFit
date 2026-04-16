@@ -1,7 +1,5 @@
-import Constants from 'expo-constants';
-
-const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
-const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+import { fetchWithTimeout, HttpError, readResponsePayload } from '../lib/http';
+import { assertBackendConfig } from '../lib/runtimeConfig';
 
 export type FoodItem = {
   food_name: string;
@@ -15,30 +13,41 @@ export type FoodItem = {
 };
 
 export const searchFood = async (query: string): Promise<FoodItem[]> => {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Food search is unavailable because the backend is not configured.');
-  }
+  const { supabaseUrl, supabaseAnonKey } = assertBackendConfig();
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/nutrition-search`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${supabaseAnonKey}`,
+  const response = await fetchWithTimeout(
+    `${supabaseUrl}/functions/v1/nutrition-search`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({ query }),
     },
-    body: JSON.stringify({ query }),
-  });
+    15000
+  );
+
+  const { json, text } = await readResponsePayload(response);
 
   if (!response.ok) {
-    throw new Error('Food search is temporarily unavailable. Use quick add until the `nutrition-search` Edge Function is deployed.');
+    const message =
+      (json?.error as string | undefined) ||
+      text ||
+      'Food search is temporarily unavailable.';
+
+    throw new HttpError(message, response.status, text);
   }
 
-  const data = await response.json();
+  if (!json) {
+    throw new Error('Food search returned a non-JSON response');
+  }
 
-  if (!data.foods || !Array.isArray(data.foods)) {
+  if (!json.foods || !Array.isArray(json.foods)) {
     throw new Error('Invalid response format from food search backend');
   }
 
-  return data.foods.map((food: any) => ({
+  return json.foods.map((food: any) => ({
     food_name: food.food_name,
     serving_qty: food.serving_qty,
     serving_unit: food.serving_unit,

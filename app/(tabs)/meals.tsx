@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, Button, Portal, Modal, TextInput, List, useTheme, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,23 +22,35 @@ export default function MealsScreen() {
   const [manualProtein, setManualProtein] = useState('');
   const [manualCarbs, setManualCarbs] = useState('');
   const [manualFats, setManualFats] = useState('');
+  const activeSearchTokenRef = useRef(0);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (user) {
-      loadTodayMeals();
+      loadTodayMeals(isMounted);
     }
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
-  const loadTodayMeals = async () => {
+  const loadTodayMeals = async (isMounted = true) => {
     try {
       setLoading(true);
       setError('');
       const todayMeals = await getTodayMeals(user?.id ?? null);
-      setMeals(todayMeals);
+      if (isMounted) {
+        setMeals(todayMeals);
+      }
     } catch (_error) {
-      setError('Unable to load meals right now.');
+      if (isMounted) {
+        setError('Unable to load meals right now.');
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
 
@@ -52,16 +64,26 @@ export default function MealsScreen() {
   };
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim() || isSearching) return;
+
+    const searchToken = Date.now();
+    activeSearchTokenRef.current = searchToken;
+
     try {
       setIsSearching(true);
       setError('');
       const results = await searchFood(searchQuery);
-      setSearchResults(results);
+      if (activeSearchTokenRef.current === searchToken) {
+        setSearchResults(results);
+      }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Food search is unavailable right now.');
+      if (activeSearchTokenRef.current === searchToken) {
+        setError(error instanceof Error ? error.message : 'Food search is unavailable right now.');
+      }
     } finally {
-      setIsSearching(false);
+      if (activeSearchTokenRef.current === searchToken) {
+        setIsSearching(false);
+      }
     }
   };
 

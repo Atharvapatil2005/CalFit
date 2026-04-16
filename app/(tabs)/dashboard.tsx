@@ -57,18 +57,27 @@ export default function DashboardScreen() {
   });
 
   useEffect(() => {
+    let isMounted = true;
+
     if (user) {
-      loadTodayMeals();
+      loadTodayMeals(isMounted);
     } else {
       setLoading(false);
     }
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
-  const loadTodayMeals = async () => {
+  const loadTodayMeals = async (isMounted = true) => {
     try {
       if (!user) return;
       
       const todayMeals = await getTodayMeals(user.id);
+
+      if (!isMounted) {
+        return;
+      }
 
       const mealTotals = todayMeals.reduce<Record<string, number>>((acc, meal: Meal) => {
         acc[meal.meal_type] = (acc[meal.meal_type] ?? 0) + meal.calories;
@@ -96,6 +105,10 @@ export default function DashboardScreen() {
         }
       }));
     } catch (_error) {
+      if (!isMounted) {
+        return;
+      }
+
       setDailyData(prev => ({
         ...prev,
         macros: {
@@ -105,7 +118,9 @@ export default function DashboardScreen() {
         }
       }));
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
 

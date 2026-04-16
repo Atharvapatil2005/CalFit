@@ -31,9 +31,20 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ query }),
     });
 
-    const data = await response.text();
+    const rawBody = await response.text();
+    const contentType = response.headers.get('content-type') ?? '';
+    const isJson = contentType.includes('application/json');
 
-    return new Response(data, {
+    let body: unknown;
+    if (isJson) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        body = null;
+      }
+    }
+
+    return new Response(JSON.stringify(body ?? { error: rawBody || 'Upstream nutrition response was not valid JSON.' }), {
       status: response.status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

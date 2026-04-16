@@ -33,6 +33,14 @@ const getReadableAuthError = (error: unknown) => {
   return 'Authentication failed.';
 };
 
+const clearLocalSessionState = async () => {
+  try {
+    await supabase.auth.signOut({ scope: 'local' });
+  } catch {
+    // Ignore local cleanup failures and continue with a signed-out UI state.
+  }
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -42,21 +50,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let isMounted = true;
 
     const bootstrapAuth = async () => {
-      const { data, error } = await supabase.auth.getSession();
+      try {
+        const { data, error } = await supabase.auth.getSession();
 
-      if (!isMounted) {
-        return;
-      }
+        if (!isMounted) {
+          return;
+        }
 
-      if (error) {
+        if (error) {
+          await clearLocalSessionState();
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(data.session ?? null);
+          setUser(data.session?.user ?? null);
+        }
+      } catch {
+        await clearLocalSessionState();
+
+        if (!isMounted) {
+          return;
+        }
+
         setSession(null);
         setUser(null);
-      } else {
-        setSession(data.session ?? null);
-        setUser(data.session?.user ?? null);
       }
 
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     };
 
     bootstrapAuth();
@@ -64,6 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!isMounted) {
+        return;
+      }
+
       setSession(nextSession ?? null);
       setUser(nextSession?.user ?? null);
       setLoading(false);
@@ -119,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
       if (error) throw error;
     } finally {
       setLoading(false);
