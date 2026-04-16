@@ -34,6 +34,11 @@ export type UserProfileInsert = {
   target_calories?: number | null;
 };
 
+export type UserProfile = UserProfileInsert & {
+  created_at?: string;
+  updated_at?: string;
+};
+
 const PROFILE_WRITE_SESSION_ERROR =
   'Your account was created, but your authenticated session was not ready to save your profile. Please sign in again to finish setup.';
 
@@ -111,6 +116,21 @@ export const upsertProfile = async (
     .single();
 
   if (error) throw buildProfileWriteError(error);
+  return data;
+};
+
+export const getProfile = async (userId: string | null): Promise<UserProfile | null> => {
+  if (!userId) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) throw error;
   return data;
 };
 

@@ -68,13 +68,32 @@ export default function RegisterScreen() {
       return;
     }
 
-    const age = Number(state.age);
-    const height = Number(state.height);
-    const weight = Number(state.weight);
+    const submissionValues = {
+      age: Number(state.age.trim()),
+      height: Number(state.height.trim()),
+      weight: Number(state.weight.trim()),
+      gender: state.gender,
+      goal: state.primaryGoal,
+      activityLevel: state.activityLevel,
+    };
+
+    console.log('[register] calorie calculation inputs', {
+      submissionValues,
+      onboardingContextSnapshot: {
+        age: state.age,
+        height: state.height,
+        weight: state.weight,
+        gender: state.gender,
+        goal: state.primaryGoal,
+        activityLevel: state.activityLevel,
+      },
+    });
+
+    const { age, height, weight, gender, goal, activityLevel } = submissionValues;
 
     if (
-      !state.gender ||
-      !state.primaryGoal ||
+      !gender ||
+      !goal ||
       !Number.isFinite(age) ||
       !Number.isFinite(height) ||
       !Number.isFinite(weight) ||
@@ -90,9 +109,9 @@ export default function RegisterScreen() {
       age,
       height,
       weight,
-      gender: state.gender,
-      activityMultiplier: activityMultipliers[state.activityLevel],
-      goal: state.primaryGoal,
+      gender,
+      activityMultiplier: activityMultipliers[activityLevel],
+      goal,
     });
 
     try {
@@ -117,15 +136,15 @@ export default function RegisterScreen() {
         );
       }
 
-      await upsertProfile(
+      const profile = await upsertProfile(
         {
           id: user.id,
           email: user.email ?? email.trim(),
-          gender: state.gender,
+          gender,
           age,
           height,
           weight,
-          health_goal: state.primaryGoal,
+          health_goal: goal,
           additional_goals: state.additionalGoals,
           dietary_preference: state.preference,
           dietary_restrictions: state.restrictions,
@@ -134,8 +153,10 @@ export default function RegisterScreen() {
         session
       );
 
-      setInfo(`Your daily calorie target is ${targetCalories} kcal`);
-      Alert.alert('Profile saved', `Your daily calorie target is ${targetCalories} kcal`);
+      const savedTargetCalories = profile?.target_calories ?? targetCalories;
+
+      setInfo(`Your daily calorie target is ${savedTargetCalories} kcal`);
+      Alert.alert('Profile saved', `Your daily calorie target is ${savedTargetCalories} kcal`);
       resetState();
       router.replace('/(tabs)/dashboard');
     } catch (signupError) {

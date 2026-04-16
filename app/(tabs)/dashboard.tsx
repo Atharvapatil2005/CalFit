@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { Text, useTheme, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { getTodayMeals, Meal } from '../../src/services/supabase';
+import { getProfile, getTodayMeals, Meal } from '../../src/services/supabase';
 import { useAuth } from '../../src/context/AuthContext';
 
 type MealType = {
@@ -35,6 +35,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [targetCalories, setTargetCalories] = useState<number | null>(null);
   const [dailyData, setDailyData] = useState<DailyData>({
     macros: {
       carbs: { current: 0, target: 250 },
@@ -60,7 +61,7 @@ export default function DashboardScreen() {
     let isMounted = true;
 
     if (user) {
-      loadTodayMeals(isMounted);
+      loadDashboardData(isMounted);
     } else {
       setLoading(false);
     }
@@ -69,15 +70,20 @@ export default function DashboardScreen() {
     };
   }, [user]);
 
-  const loadTodayMeals = async (isMounted = true) => {
+  const loadDashboardData = async (isMounted = true) => {
     try {
       if (!user) return;
-      
-      const todayMeals = await getTodayMeals(user.id);
+
+      const [todayMeals, profile] = await Promise.all([
+        getTodayMeals(user.id),
+        getProfile(user.id),
+      ]);
 
       if (!isMounted) {
         return;
       }
+
+      setTargetCalories(profile?.target_calories ?? null);
 
       const mealTotals = todayMeals.reduce<Record<string, number>>((acc, meal: Meal) => {
         acc[meal.meal_type] = (acc[meal.meal_type] ?? 0) + meal.calories;
@@ -132,6 +138,9 @@ export default function DashboardScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text variant="headlineMedium">Today's Progress</Text>
+        {targetCalories ? (
+          <Text variant="bodyMedium">Daily calorie target: {targetCalories} kcal</Text>
+        ) : null}
         {loading ? <Text variant="bodyMedium">Refreshing...</Text> : null}
       </View>
 

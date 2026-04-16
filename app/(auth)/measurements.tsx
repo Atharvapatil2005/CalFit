@@ -4,12 +4,19 @@ import { Text, Button, TextInput } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../src/constants/theme';
-import { useOnboarding } from '../../src/context/OnboardingContext';
+import { ActivityLevel, useOnboarding } from '../../src/context/OnboardingContext';
 
 export default function MeasurementsScreen() {
   const { state, updateState } = useOnboarding();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  const activityLevels: { value: ActivityLevel; label: string }[] = [
+    { value: 'sedentary', label: 'Sedentary' },
+    { value: 'light', label: 'Light' },
+    { value: 'moderate', label: 'Moderate' },
+    { value: 'active', label: 'Active' },
+  ];
 
   const isValid = Boolean(state.height.trim() && state.weight.trim() && state.age.trim());
 
@@ -88,6 +95,22 @@ export default function MeasurementsScreen() {
                   style={styles.input}
                 />
               </View>
+
+              <View style={styles.inputContainer}>
+                <Text variant="titleMedium" style={styles.label}>Activity level</Text>
+                <View style={styles.activityContainer}>
+                  {activityLevels.map((option) => (
+                    <Button
+                      key={option.value}
+                      mode={state.activityLevel === option.value ? 'contained' : 'outlined'}
+                      onPress={() => updateState({ activityLevel: option.value })}
+                      style={styles.activityButton}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </View>
+              </View>
             </View>
 
             <View style={styles.footer}>
@@ -152,6 +175,14 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: theme.colors.background,
+  },
+  activityContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  activityButton: {
+    borderRadius: 999,
   },
   footer: {
     marginTop: 'auto',
