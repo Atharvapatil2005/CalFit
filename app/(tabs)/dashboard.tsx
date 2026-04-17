@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { calculateMacroTargets } from '../../src/lib/macroCalculator';
 import { getProfile, getTodayMeals, Meal } from '../../src/services/supabase';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTheme as useAppTheme } from '../../src/theme/useTheme';
 
 type MealType = {
   name: string;
@@ -32,7 +33,8 @@ type DailyData = {
 };
 
 export default function DashboardScreen() {
-  const theme = useTheme();
+  const paperTheme = useTheme();
+  const theme = useAppTheme();
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -177,67 +179,67 @@ export default function DashboardScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Text variant="headlineMedium">Today's Progress</Text>
+        <Text variant="headlineMedium" style={{ color: theme.text }}>Today's Progress</Text>
         {targetCalories ? (
-          <Text variant="bodyMedium">Daily calorie target: {targetCalories} kcal</Text>
+          <Text variant="bodyMedium" style={{ color: theme.subtext }}>Daily calorie target: {targetCalories} kcal</Text>
         ) : null}
-        {loading ? <Text variant="bodyMedium">Refreshing...</Text> : null}
+        {loading ? <Text variant="bodyMedium" style={{ color: theme.subtext }}>Refreshing...</Text> : null}
       </View>
 
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.card }]}>
         <Card.Content>
-          <Text variant="titleMedium" style={styles.cardTitle}>Macros</Text>
+          <Text variant="titleMedium" style={[styles.cardTitle, { color: theme.text }]}>Macros</Text>
           <View style={styles.macroContainer}>
             {Object.entries(dailyData.macros).map(([key, value]) => (
               <View key={key} style={styles.macroItem}>
-                <Text variant="bodyLarge">{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
-                <Text variant="headlineSmall">{value.current}g</Text>
-                <Text variant="bodySmall">of {value.target}g</Text>
+                <Text variant="bodyLarge" style={{ color: theme.text }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+                <Text variant="headlineSmall" style={{ color: theme.text }}>{value.current}g</Text>
+                <Text variant="bodySmall" style={{ color: theme.subtext }}>of {value.target}g</Text>
             </View>
             ))}
           </View>
         </Card.Content>
       </Card>
 
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.card }]}>
         <Card.Content>
-          <Text variant="titleMedium" style={styles.cardTitle}>Meals</Text>
+          <Text variant="titleMedium" style={[styles.cardTitle, { color: theme.text }]}>Meals</Text>
           <View style={styles.mealsContainer}>
         {Object.entries(dailyData.meals).map(([key, meal]) => (
               <Pressable
                 key={key}
-                style={styles.mealItem}
+                style={[styles.mealItem, { backgroundColor: theme.background, borderColor: theme.border }]}
                 onPress={() => navigateToAddMeal(key)}
               >
-              <MaterialCommunityIcons
-                name={meal.icon}
-                size={24}
-                  color={theme.colors.primary}
+                <MaterialCommunityIcons
+                  name={meal.icon}
+                  size={24}
+                  color={paperTheme.colors.primary}
                 />
-                <Text variant="bodyMedium">{meal.name}</Text>
-                <Text variant="bodySmall">{meal.calories} kcal</Text>
+                <Text variant="bodyMedium" style={{ color: theme.text }}>{meal.name}</Text>
+                <Text variant="bodySmall" style={{ color: theme.subtext }}>{meal.calories} kcal</Text>
               </Pressable>
             ))}
           </View>
         </Card.Content>
       </Card>
 
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.card }]}>
         <Card.Content>
-          <Text variant="titleMedium" style={styles.cardTitle}>Water</Text>
+          <Text variant="titleMedium" style={[styles.cardTitle, { color: theme.text }]}>Water</Text>
           <View style={styles.waterContainer}>
-            <Text variant="headlineLarge">{dailyData.water.current}</Text>
-            <Text variant="bodyMedium">of {dailyData.water.target} glasses</Text>
+            <Text variant="headlineLarge" style={{ color: theme.text }}>{dailyData.water.current}</Text>
+            <Text variant="bodyMedium" style={{ color: theme.subtext }}>of {dailyData.water.target} glasses</Text>
           </View>
         </Card.Content>
       </Card>
 
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.card }]}>
         <Card.Content>
-          <Text variant="titleMedium" style={styles.cardTitle}>Exercise</Text>
-          <Text variant="bodyLarge">{dailyData.exercise.goal}</Text>
+          <Text variant="titleMedium" style={[styles.cardTitle, { color: theme.text }]}>Exercise</Text>
+          <Text variant="bodyLarge" style={{ color: theme.text }}>{dailyData.exercise.goal}</Text>
         </Card.Content>
       </Card>
     </ScrollView>
@@ -247,7 +249,6 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     padding: 16,
@@ -276,8 +277,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     marginBottom: 16,
-    backgroundColor: '#f5f5f5',
     borderRadius: 8,
+    borderWidth: 1,
   },
   waterContainer: {
     alignItems: 'center',
