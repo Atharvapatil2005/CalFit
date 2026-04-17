@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { Text, useTheme, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { calculateMacroTargets } from '../../src/lib/macroCalculator';
 import { getProfile, getTodayMeals, Meal } from '../../src/services/supabase';
 import { useAuth } from '../../src/context/AuthContext';
@@ -82,18 +82,22 @@ export default function DashboardScreen() {
     }));
   }, [profile?.target_calories]);
 
-  useEffect(() => {
-    let isMounted = true;
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
 
-    if (user) {
-      loadDashboardData(isMounted);
-    } else {
-      setLoading(false);
-    }
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
+      if (user) {
+        console.log('[DASHBOARD] Screen focused, refreshing data...');
+        loadDashboardData(isMounted);
+      } else {
+        setLoading(false);
+      }
+      
+      return () => {
+        isMounted = false;
+      };
+    }, [user])
+  );
 
   const loadDashboardData = async (isMounted = true) => {
     try {
