@@ -7,6 +7,11 @@ import { searchFood, FoodItem } from '../../src/services/nutritionService';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTheme as useAppTheme } from '../../src/theme/useTheme';
 
+const safe = (v: any): number => {
+  const num = Number(v);
+  return isNaN(num) ? 0 : num;
+};
+
 export default function MealsScreen() {
   const paperTheme = useTheme();
   const theme = useAppTheme();
@@ -201,7 +206,9 @@ export default function MealsScreen() {
                 />
                 <View style={styles.mealTextContainer}>
                   <Text variant="bodyLarge" style={{ color: theme.text }}>{meal.food_name}</Text>
-                  <Text variant="bodySmall" style={{ color: theme.subtext }}>{meal.calories} kcal | P: {meal.protein}g | C: {meal.carbs}g | F: {meal.fats}g</Text>
+                  <Text variant="bodySmall" style={{ color: theme.subtext }}>
+                    {safe(meal.calories)} kcal | P: {safe(meal.protein)}g | C: {safe(meal.carbs)}g | F: {safe(meal.fats)}g
+                  </Text>
                 </View>
                 <IconButton
                   icon="delete"
@@ -243,12 +250,17 @@ export default function MealsScreen() {
             <ActivityIndicator style={styles.loader} />
           ) : (
             <ScrollView style={styles.searchResults}>
-              {searchResults.map((food) => (
-                <Surface key={food.food_name} style={[styles.searchResultItem, { backgroundColor: theme.background, borderColor: theme.border }]}>
-                  <Text variant="bodyLarge" style={{ color: theme.text }} onPress={() => handleAddMeal(food)}>{food.food_name}</Text>
-                  <Text variant="bodySmall" style={{ color: theme.subtext }}>{food.calories} kcal | P: {food.protein}g | C: {food.carbs}g | F: {food.fats}g</Text>
-                </Surface>
-              ))}
+              {searchResults.map((food, index) => {
+                console.log('[UI] RENDER FOOD ITEM:', food.food_name, 'cal:', food.calories);
+                return (
+                  <Surface key={`${food.food_name}-${index}`} style={[styles.searchResultItem, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                    <Text variant="bodyLarge" style={{ color: theme.text }} onPress={() => handleAddMeal(food)}>{food.food_name}</Text>
+                    <Text variant="bodySmall" style={{ color: theme.subtext }}>
+                      {safe(food.calories)} kcal | P: {safe(food.protein)}g | C: {safe(food.carbs)}g | F: {safe(food.fats)}g
+                    </Text>
+                  </Surface>
+                );
+              })}
             </ScrollView>
           )}
           <Text variant="titleMedium" style={[styles.manualSectionTitle, { color: theme.text }]}>Quick add manually</Text>
