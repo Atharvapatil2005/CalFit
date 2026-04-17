@@ -9,12 +9,13 @@ import { theme } from '../src/constants/theme';
 import { AuthProvider } from '../src/context/AuthContext';
 import { useAuth } from '../src/context/AuthContext';
 import { OnboardingProvider } from '../src/context/OnboardingContext';
-import { useTheme as useAppTheme } from '../src/theme/useTheme';
+import { ThemeProvider } from '../src/theme/ThemeContext';
+import { useTheme } from '../src/theme/useTheme';
 
 function AppNavigator() {
   const { session, loading } = useAuth();
   const segments = useSegments();
-  const theme = useAppTheme();
+  const theme = useTheme();
 
   useEffect(() => {
     if (loading) {
@@ -82,13 +83,15 @@ function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <GestureHandlerRootView style={styles.appRoot}>
       <SafeAreaProvider>
-        <AuthProvider>
-          <OnboardingProvider>
-            <PaperProvider theme={theme}>
-              {children}
-            </PaperProvider>
-          </OnboardingProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <OnboardingProvider>
+              <PaperProvider theme={theme}>
+                {children}
+              </PaperProvider>
+            </OnboardingProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
