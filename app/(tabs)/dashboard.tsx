@@ -36,8 +36,8 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<{ target_calories?: number | null } | null>(null);
   const [targetCalories, setTargetCalories] = useState<number | null>(null);
-  const macroTargets = targetCalories ? calculateMacroTargets(targetCalories) : null;
   const [dailyData, setDailyData] = useState<DailyData>({
     macros: {
       carbs: { current: 0, target: 0 },
@@ -60,6 +60,27 @@ export default function DashboardScreen() {
   });
 
   useEffect(() => {
+    console.log('Profile:', profile);
+    console.log('Calories:', profile?.target_calories);
+
+    if (!profile?.target_calories) {
+      return;
+    }
+
+    const macroTargets = calculateMacroTargets(profile.target_calories);
+    console.log('Macro Targets:', macroTargets);
+
+    setDailyData(prev => ({
+      ...prev,
+      macros: {
+        carbs: { ...prev.macros.carbs, target: macroTargets.carbs },
+        protein: { ...prev.macros.protein, target: macroTargets.protein },
+        fat: { ...prev.macros.fat, target: macroTargets.fat },
+      },
+    }));
+  }, [profile?.target_calories]);
+
+  useEffect(() => {
     let isMounted = true;
 
     if (user) {
@@ -76,7 +97,7 @@ export default function DashboardScreen() {
     try {
       if (!user) return;
 
-      const [todayMeals, profile] = await Promise.all([
+      const [todayMeals, nextProfile] = await Promise.all([
         getTodayMeals(user.id),
         getProfile(user.id),
       ]);
@@ -85,7 +106,8 @@ export default function DashboardScreen() {
         return;
       }
 
-      setTargetCalories(profile?.target_calories ?? null);
+      setProfile(nextProfile);
+      setTargetCalories(nextProfile?.target_calories ?? null);
 
       const mealTotals = todayMeals.reduce<Record<string, number>>((acc, meal: Meal) => {
         acc[meal.meal_type] = (acc[meal.meal_type] ?? 0) + meal.calories;
@@ -103,15 +125,15 @@ export default function DashboardScreen() {
         macros: {
           carbs: {
             current: macros.carbs,
-            target: macroTargets?.carbs ?? prev.macros.carbs.target,
+            target: prev.macros.carbs.target,
           },
           protein: {
             current: macros.protein,
-            target: macroTargets?.protein ?? prev.macros.protein.target,
+            target: prev.macros.protein.target,
           },
           fat: {
             current: macros.fat,
-            target: macroTargets?.fat ?? prev.macros.fat.target,
+            target: prev.macros.fat.target,
           }
         },
         meals: {
@@ -131,15 +153,15 @@ export default function DashboardScreen() {
         macros: {
           carbs: {
             current: 0,
-            target: macroTargets?.carbs ?? prev.macros.carbs.target,
+            target: prev.macros.carbs.target,
           },
           protein: {
             current: 0,
-            target: macroTargets?.protein ?? prev.macros.protein.target,
+            target: prev.macros.protein.target,
           },
           fat: {
             current: 0,
-            target: macroTargets?.fat ?? prev.macros.fat.target,
+            target: prev.macros.fat.target,
           }
         }
       }));
