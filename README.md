@@ -12,6 +12,17 @@ Install the latest preview build directly on your Android device:
 [Download CalFit APK](https://expo.dev/accounts/atharvapatil/projects/calfit/builds/e7cd4b98-7ddd-4a6e-b1d6-9d42ff7097d3)
 
 ---
+##  Version History
+
+### v1.0.0 (Beta)
+- Initial release with core features
+
+### v1.1.0 (Stable)
+- Fixed auth/session issues
+- Stable meal logging
+- Reliable food search
+- AI chat integration
+- Full dark mode support
 
 ## Features
 
