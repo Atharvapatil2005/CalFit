@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, useColorScheme } from 'react-native';
 import { Text, Button, Portal, Modal, TextInput, List, useTheme, IconButton, Surface } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { addMeal, getTodayMeals, deleteMeal, Meal } from '../../src/services/supabase';
@@ -15,6 +15,15 @@ const safe = (v: any): number => {
 export default function MealsScreen() {
   const paperTheme = useTheme();
   const theme = useAppTheme();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const colors = {
+    background: isDark ? '#121212' : '#ffffff',
+    text: isDark ? '#ffffff' : '#000000',
+    inputBg: isDark ? '#1e1e1e' : '#f5f5f5',
+    border: isDark ? '#333333' : '#dddddd',
+    placeholder: isDark ? '#888888' : '#999999',
+  };
   const { user } = useAuth();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(false);
@@ -172,9 +181,9 @@ export default function MealsScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text variant="headlineMedium" style={{ color: theme.text }}>Today's Meals</Text>
+        <Text variant="headlineMedium" style={{ color: colors.text }}>Today's Meals</Text>
         <Button
           mode="contained"
           onPress={() => setIsModalVisible(true)}
@@ -192,7 +201,7 @@ export default function MealsScreen() {
         <ScrollView style={styles.mealsList}>
           {meals.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text variant="titleMedium" style={{ color: theme.text }}>No meals logged yet</Text>
+              <Text variant="titleMedium" style={{ color: colors.text }}>No meals logged yet</Text>
               <Text variant="bodyMedium" style={{ color: theme.subtext }}>Add your first meal to start tracking today's intake.</Text>
             </View>
           ) : null}
@@ -210,7 +219,7 @@ export default function MealsScreen() {
                   color={paperTheme.colors.primary}
                 />
                 <View style={styles.mealTextContainer}>
-                  <Text variant="bodyLarge" style={{ color: theme.text }}>{meal.food_name}</Text>
+                  <Text variant="bodyLarge" style={{ color: colors.text }}>{meal.food_name}</Text>
                   <Text variant="bodySmall" style={{ color: theme.subtext }}>
                     {safe(meal.calories)} kcal | P: {safe(meal.protein)}g | C: {safe(meal.carbs)}g | F: {safe(meal.fats)}g
                   </Text>
@@ -232,7 +241,7 @@ export default function MealsScreen() {
           onDismiss={() => setIsModalVisible(false)}
           contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.card }]}
         >
-          <Text variant="headlineSmall" style={[styles.modalTitle, { color: theme.text }]}>Add Meal</Text>
+          <Text variant="headlineSmall" style={[styles.modalTitle, { color: colors.text }]}>Add Meal</Text>
           <View style={styles.mealTypeContainer}>
             {renderMealTypeButton('breakfast', 'food-croissant')}
             {renderMealTypeButton('lunch', 'food')}
@@ -243,7 +252,19 @@ export default function MealsScreen() {
             label="Search for food"
             value={searchQuery}
             onChangeText={setSearchQuery}
-            style={[styles.searchInput, { backgroundColor: theme.background }]}
+            style={[styles.searchInput, { backgroundColor: colors.inputBg }]}
+            textColor={colors.text}
+            placeholderTextColor={colors.placeholder}
+            theme={{
+              colors: {
+                text: colors.text,
+                onSurface: colors.text,
+                onSurfaceVariant: colors.placeholder,
+                placeholder: colors.placeholder,
+                outline: colors.border,
+                background: colors.inputBg,
+              },
+            }}
             right={
               <TextInput.Icon
                 icon="magnify"
@@ -273,9 +294,9 @@ export default function MealsScreen() {
                   return (
                     <Surface 
                       key={`${food.food_name}-${index}`} 
-                      style={[styles.searchResultItem, { backgroundColor: theme.background, borderColor: theme.border }]}
+                      style={[styles.searchResultItem, { backgroundColor: colors.inputBg, borderColor: colors.border }]}
                     >
-                      <Text variant="bodyLarge" style={{ color: theme.text }} onPress={() => handleAddMeal(food)}>{food.food_name}</Text>
+                      <Text variant="bodyLarge" style={{ color: colors.text }} onPress={() => handleAddMeal(food)}>{food.food_name}</Text>
                       <Text variant="bodySmall" style={{ color: theme.subtext }}>
                         {safe(food.calories)} kcal | P: {safe(food.protein)}g | C: {safe(food.carbs)}g | F: {safe(food.fats)}g
                       </Text>
@@ -285,12 +306,24 @@ export default function MealsScreen() {
               </ScrollView>
             )}
           </View>
-          <Text variant="titleMedium" style={[styles.manualSectionTitle, { color: theme.text }]}>Quick add manually</Text>
+          <Text variant="titleMedium" style={[styles.manualSectionTitle, { color: colors.text }]}>Quick add manually</Text>
           <TextInput
             label="Food name"
             value={manualFoodName}
             onChangeText={setManualFoodName}
-            style={[styles.searchInput, { backgroundColor: theme.background }]}
+            style={[styles.searchInput, { backgroundColor: colors.inputBg }]}
+            textColor={colors.text}
+            placeholderTextColor={colors.placeholder}
+            theme={{
+              colors: {
+                text: colors.text,
+                onSurface: colors.text,
+                onSurfaceVariant: colors.placeholder,
+                placeholder: colors.placeholder,
+                outline: colors.border,
+                background: colors.inputBg,
+              },
+            }}
           />
           <View style={styles.macroRow}>
             <TextInput
@@ -298,14 +331,38 @@ export default function MealsScreen() {
               value={manualCalories}
               onChangeText={setManualCalories}
               keyboardType="numeric"
-              style={[styles.macroInput, { backgroundColor: theme.background }]}
+              style={[styles.macroInput, { backgroundColor: colors.inputBg }]}
+              textColor={colors.text}
+              placeholderTextColor={colors.placeholder}
+              theme={{
+                colors: {
+                  text: colors.text,
+                  onSurface: colors.text,
+                  onSurfaceVariant: colors.placeholder,
+                  placeholder: colors.placeholder,
+                  outline: colors.border,
+                  background: colors.inputBg,
+                },
+              }}
             />
             <TextInput
               label="Protein"
               value={manualProtein}
               onChangeText={setManualProtein}
               keyboardType="numeric"
-              style={[styles.macroInput, { backgroundColor: theme.background }]}
+              style={[styles.macroInput, { backgroundColor: colors.inputBg }]}
+              textColor={colors.text}
+              placeholderTextColor={colors.placeholder}
+              theme={{
+                colors: {
+                  text: colors.text,
+                  onSurface: colors.text,
+                  onSurfaceVariant: colors.placeholder,
+                  placeholder: colors.placeholder,
+                  outline: colors.border,
+                  background: colors.inputBg,
+                },
+              }}
             />
           </View>
           <View style={styles.macroRow}>
@@ -314,14 +371,38 @@ export default function MealsScreen() {
               value={manualCarbs}
               onChangeText={setManualCarbs}
               keyboardType="numeric"
-              style={[styles.macroInput, { backgroundColor: theme.background }]}
+              style={[styles.macroInput, { backgroundColor: colors.inputBg }]}
+              textColor={colors.text}
+              placeholderTextColor={colors.placeholder}
+              theme={{
+                colors: {
+                  text: colors.text,
+                  onSurface: colors.text,
+                  onSurfaceVariant: colors.placeholder,
+                  placeholder: colors.placeholder,
+                  outline: colors.border,
+                  background: colors.inputBg,
+                },
+              }}
             />
             <TextInput
               label="Fats"
               value={manualFats}
               onChangeText={setManualFats}
               keyboardType="numeric"
-              style={[styles.macroInput, { backgroundColor: theme.background }]}
+              style={[styles.macroInput, { backgroundColor: colors.inputBg }]}
+              textColor={colors.text}
+              placeholderTextColor={colors.placeholder}
+              theme={{
+                colors: {
+                  text: colors.text,
+                  onSurface: colors.text,
+                  onSurfaceVariant: colors.placeholder,
+                  placeholder: colors.placeholder,
+                  outline: colors.border,
+                  background: colors.inputBg,
+                },
+              }}
             />
           </View>
           <Button
