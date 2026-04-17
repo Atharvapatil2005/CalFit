@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { Text, TextInput, IconButton, Surface, useTheme } from 'react-native-paper';
+import { Text, TextInput, Surface } from 'react-native-paper';
 import { sendMessage } from '../../src/services/aiService';
-import { useTheme as useAppTheme } from '../../src/theme/useTheme';
+import { useTheme } from '../../src/theme/useTheme';
 
 type Message = {
   id: string;
@@ -13,8 +13,7 @@ type Message = {
 };
 
 export default function ChatScreen() {
-  const paperTheme = useTheme();
-  const theme = useAppTheme();
+  const theme = useTheme();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -72,7 +71,7 @@ export default function ChatScreen() {
       const errorText =
         error instanceof Error
           ? error.message
-          : 'I’m having trouble connecting to the AI service right now.';
+          : "I'm having trouble connecting to the AI service right now.";
 
       if (lastFailedMessageRef.current === trimmedMessage) {
         return;
@@ -94,6 +93,25 @@ export default function ChatScreen() {
     }
   };
 
+  const getMessageColors = (msg: Message) => {
+    if (msg.error) {
+      return {
+        backgroundColor: theme.danger + '20',
+        textColor: theme.danger,
+      };
+    }
+    if (msg.isUser) {
+      return {
+        backgroundColor: theme.primary,
+        textColor: '#ffffff',
+      };
+    }
+    return {
+      backgroundColor: theme.card,
+      textColor: theme.text,
+    };
+  };
+
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.background }]}
@@ -105,50 +123,31 @@ export default function ChatScreen() {
         style={styles.messagesContainer}
         contentContainerStyle={styles.messagesContent}
       >
-        {messages.map((msg) => (
-          <Surface
-            key={msg.id}
-            style={[
-              styles.messageBubble,
-              msg.isUser ? styles.userMessage : styles.aiMessage,
-              { 
-                backgroundColor: msg.error 
-                  ? paperTheme.colors.errorContainer 
-                  : msg.isUser 
-                    ? paperTheme.colors.primary 
-                    : theme.card 
-              },
-            ]}
-          >
-            <Text style={[
-              styles.messageText,
-              { 
-                color: msg.error 
-                  ? paperTheme.colors.onErrorContainer 
-                  : msg.isUser 
-                    ? paperTheme.colors.onPrimary 
-                    : theme.text 
-              }
-            ]}>
-              {msg.text}
-            </Text>
-            <Text style={[
-              styles.timestamp,
-              { 
-                color: msg.error 
-                  ? paperTheme.colors.onErrorContainer 
-                  : msg.isUser 
-                    ? paperTheme.colors.onPrimary 
-                    : theme.subtext 
-              }
-            ]}>
-              {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </Text>
-          </Surface>
-        ))}
+        {messages.map((msg) => {
+          const colors = getMessageColors(msg);
+          return (
+            <Surface
+              key={msg.id}
+              style={[
+                styles.messageBubble,
+                msg.isUser ? styles.userMessage : styles.aiMessage,
+                { 
+                  backgroundColor: colors.backgroundColor,
+                },
+              ]}
+            >
+              <Text style={[styles.messageText, { color: colors.textColor }]}>
+                {msg.text}
+              </Text>
+              <Text style={[styles.timestamp, { color: colors.textColor, opacity: 0.7 }]}>
+                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </Surface>
+          );
+        })}
         {isLoading && (
           <Surface style={[styles.messageBubble, styles.aiMessage, { backgroundColor: theme.card }]}>
-            <ActivityIndicator color={paperTheme.colors.primary} />
+            <ActivityIndicator color={theme.primary} />
           </Surface>
         )}
       </ScrollView>
@@ -160,7 +159,8 @@ export default function ChatScreen() {
           onChangeText={setMessage}
           placeholder="Ask me anything about nutrition..."
           placeholderTextColor={theme.subtext}
-          style={[styles.input, { backgroundColor: theme.card }]}
+          textColor={theme.text}
+          style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border }]}
           right={
             <TextInput.Icon
               icon="send"
@@ -202,7 +202,6 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
-    opacity: 0.7,
     marginTop: 4,
   },
   inputContainer: {
@@ -212,4 +211,4 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: 'transparent',
   },
-}); 
+});
