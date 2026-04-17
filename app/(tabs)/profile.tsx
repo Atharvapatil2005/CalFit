@@ -1,12 +1,14 @@
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
-import { Text, Card, List, Switch, Button } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Text, Card, List, Switch, Button, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTheme as useAppTheme } from '../../src/theme/useTheme';
 
 export default function ProfileScreen() {
+  const paperTheme = useTheme();
+  const theme = useAppTheme();
   const { user, signOut } = useAuth();
-  const [darkMode, setDarkMode] = React.useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -18,60 +20,74 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Card style={styles.card}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <Card style={[styles.card, { backgroundColor: theme.card }]}>
         <Card.Content>
-          <Text variant="titleLarge">{user?.user_metadata?.full_name || 'User'}</Text>
-          <Text variant="bodyMedium">{user?.email}</Text>
+          <Text variant="titleLarge" style={{ color: theme.text }}>{user?.user_metadata?.full_name || 'User'}</Text>
+          <Text variant="bodyMedium" style={{ color: theme.subtext }}>{user?.email}</Text>
         </Card.Content>
       </Card>
 
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.card }]}>
         <Card.Content>
           <List.Section>
-            <List.Subheader>Settings</List.Subheader>
+            <List.Subheader style={{ color: theme.subtext }}>Settings</List.Subheader>
             <List.Item
               title="Dark Mode"
+              titleStyle={{ color: theme.text }}
+              description="Toggle system theme"
+              descriptionStyle={{ color: theme.subtext }}
               right={() => (
                 <Switch
-                  value={darkMode}
-                  onValueChange={setDarkMode}
+                  value={false}
+                  onValueChange={() => {}}
+                  color={paperTheme.colors.primary}
                 />
               )}
             />
             <List.Item
               title="Units"
+              titleStyle={{ color: theme.text }}
               description="Metric (kg, cm)"
+              descriptionStyle={{ color: theme.subtext }}
               onPress={() => {}}
             />
             <List.Item
               title="Activity Level"
+              titleStyle={{ color: theme.text }}
               description="Moderately Active"
+              descriptionStyle={{ color: theme.subtext }}
               onPress={() => {}}
             />
             <List.Item
               title="Health Goals"
+              titleStyle={{ color: theme.text }}
               description="Lose Weight"
+              descriptionStyle={{ color: theme.subtext }}
               onPress={() => {}}
             />
           </List.Section>
         </Card.Content>
       </Card>
 
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.card }]}>
         <Card.Content>
           <List.Section>
-            <List.Subheader>App Info</List.Subheader>
+            <List.Subheader style={{ color: theme.subtext }}>App Info</List.Subheader>
             <List.Item
               title="Version"
+              titleStyle={{ color: theme.text }}
               description="1.0.0"
+              descriptionStyle={{ color: theme.subtext }}
             />
             <List.Item
               title="Terms of Service"
+              titleStyle={{ color: theme.text }}
               onPress={() => {}}
             />
             <List.Item
               title="Privacy Policy"
+              titleStyle={{ color: theme.text }}
               onPress={() => {}}
             />
           </List.Section>
