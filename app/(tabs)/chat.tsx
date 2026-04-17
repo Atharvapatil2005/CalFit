@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Text, TextInput, IconButton, Surface, useTheme } from 'react-native-paper';
 import { sendMessage } from '../../src/services/aiService';
+import { useTheme as useAppTheme } from '../../src/theme/useTheme';
 
 type Message = {
   id: string;
@@ -12,7 +13,8 @@ type Message = {
 };
 
 export default function ChatScreen() {
-  const theme = useTheme();
+  const paperTheme = useTheme();
+  const theme = useAppTheme();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -94,7 +96,7 @@ export default function ChatScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={100}
     >
@@ -111,10 +113,10 @@ export default function ChatScreen() {
               msg.isUser ? styles.userMessage : styles.aiMessage,
               { 
                 backgroundColor: msg.error 
-                  ? theme.colors.errorContainer 
+                  ? paperTheme.colors.errorContainer 
                   : msg.isUser 
-                    ? theme.colors.primary 
-                    : theme.colors.surfaceVariant 
+                    ? paperTheme.colors.primary 
+                    : theme.card 
               },
             ]}
           >
@@ -122,10 +124,10 @@ export default function ChatScreen() {
               styles.messageText,
               { 
                 color: msg.error 
-                  ? theme.colors.onErrorContainer 
+                  ? paperTheme.colors.onErrorContainer 
                   : msg.isUser 
-                    ? theme.colors.onPrimary 
-                    : theme.colors.onSurfaceVariant 
+                    ? paperTheme.colors.onPrimary 
+                    : theme.text 
               }
             ]}>
               {msg.text}
@@ -134,10 +136,10 @@ export default function ChatScreen() {
               styles.timestamp,
               { 
                 color: msg.error 
-                  ? theme.colors.onErrorContainer 
+                  ? paperTheme.colors.onErrorContainer 
                   : msg.isUser 
-                    ? theme.colors.onPrimary 
-                    : theme.colors.onSurfaceVariant 
+                    ? paperTheme.colors.onPrimary 
+                    : theme.subtext 
               }
             ]}>
               {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -145,19 +147,20 @@ export default function ChatScreen() {
           </Surface>
         ))}
         {isLoading && (
-          <Surface style={[styles.messageBubble, styles.aiMessage, { backgroundColor: theme.colors.surfaceVariant }]}>
-            <ActivityIndicator color={theme.colors.primary} />
+          <Surface style={[styles.messageBubble, styles.aiMessage, { backgroundColor: theme.card }]}>
+            <ActivityIndicator color={paperTheme.colors.primary} />
           </Surface>
         )}
       </ScrollView>
 
-      <View style={[styles.inputContainer, { borderTopColor: theme.colors.outline }]}>
+      <View style={[styles.inputContainer, { borderTopColor: theme.border, backgroundColor: theme.background }]}>
         <TextInput
           mode="outlined"
           value={message}
           onChangeText={setMessage}
           placeholder="Ask me anything about nutrition..."
-          style={styles.input}
+          placeholderTextColor={theme.subtext}
+          style={[styles.input, { backgroundColor: theme.card }]}
           right={
             <TextInput.Icon
               icon="send"
