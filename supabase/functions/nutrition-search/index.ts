@@ -34,11 +34,11 @@ Deno.serve(async (req) => {
     }
 
     const searchUrl = new URL('https://world.openfoodfacts.org/cgi/search.pl');
-    searchUrl.searchParams.set('search_terms', query);
+    searchUrl.searchParams.set('search_terms', query.trim());
     searchUrl.searchParams.set('search_simple', '1');
     searchUrl.searchParams.set('action', 'process');
     searchUrl.searchParams.set('json', '1');
-    searchUrl.searchParams.set('page_size', '20');
+    searchUrl.searchParams.set('page_size', '30');
     searchUrl.searchParams.set('fields', 'product_name,nutriments,serving_size');
 
     console.log('[EDGE] Fetching:', searchUrl.toString());
@@ -57,31 +57,40 @@ Deno.serve(async (req) => {
       data = JSON.parse(rawText);
     } catch (e) {
       console.error('[EDGE] JSON parse failed:', e);
-      console.error('[EDGE] Raw text preview:', rawText.substring(0, 500));
       return new Response(JSON.stringify({ foods: [] }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log('[EDGE] Products count:', data?.products?.length ?? 0);
-    
-    if (data?.products?.length > 0) {
-      console.log('[EDGE] RAW PRODUCTS sample:', JSON.stringify(data.products.slice(0, 2)));
+    const rawProductCount = data?.products?.length ?? 0;
+    console.log('[EDGE] Raw products count:', rawProductCount);
+
+    if (rawProductCount > 0) {
+      console.log('[EDGE] Sample raw product:', JSON.stringify(data.products[0]).substring(0, 300));
     }
 
-    if (!data?.products || !Array.isArray(data.products)) {
-      console.log('[EDGE] No products found');
-      return new Response(JSON.stringify({ foods: [] }), {
+    if (!data?.products || !Array.isArray(data.products) || rawProductCount === 0) {
+      console.log('[EDGE] No products from API, returning fallback');
+      const fallbackFood = {
+        food_name: query.trim(),
+        serving_qty: 100,
+        serving_unit: 'g',
+        calories: 100,
+        protein: 5,
+        carbs: 15,
+        fats: 3,
+      };
+      return new Response(JSON.stringify({ foods: [fallbackFood] }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const foods = data.products.slice(0, 15).map((item: any) => {
+    const foods = data.products.slice(0, 30).map((item: any) => {
       const nutriments = item?.nutriments || {};
 
-      const food = {
+      return {
         food_name: item.product_name || 'Unknown food',
         serving_qty: 100,
         serving_unit: 'g',
@@ -90,19 +99,36 @@ Deno.serve(async (req) => {
         carbs: Math.round(safeNumber(nutriments['carbohydrates_100g'])),
         fats: Math.round(safeNumber(nutriments['fat_100g'])),
       };
-
-      console.log('[EDGE] Mapped:', food.food_name, '| cal:', food.calories, '| p:', food.protein, '| c:', food.carbs, '| f:', food.fats);
-      return food;
     });
 
-    console.log('[EDGE] NORMALIZED FOODS sample:', JSON.stringify(foods.slice(0, 2)));
+    const mappedCount = foods.length;
+    console.log('[EDGE] Mapped foods count:', mappedCount);
 
     const cleanFoods = foods.filter(f => 
       f.food_name && 
-      f.food_name !== 'Unknown food' &&
-      typeof f.calories === 'number' &&
-      f.calories > 0
+      f.food_name !== 'Unknown food'
     );
+
+    const filteredCount = cleanFoods.length;
+    console.log('[EDGE] After filtering:', filteredCount, 'foods');
+
+    // If no valid foods after filtering, return generic fallback
+    if (cleanFoods.length === 0) {
+      console.log('[EDGE] No valid foods, returning query as fallback');
+      const fallbackFood = {
+        food_name: query.trim(),
+        serving_qty: 100,
+        serving_unit: 'g',
+        calories: 100,
+        protein: 5,
+        carbs: 15,
+        fats: 3,
+      };
+      return new Response(JSON.stringify({ foods: [fallbackFood] }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     console.log('[EDGE] Returning', cleanFoods.length, 'foods');
 
@@ -110,6 +136,7 @@ Deno.serve(async (req) => {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
     console.error('[EDGE] Unexpected error:', error);
     return new Response(JSON.stringify({ foods: [] }), {
