@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { Text, useTheme, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { calculateMacroTargets } from '../../src/lib/macroCalculator';
 import { getProfile, getTodayMeals, Meal } from '../../src/services/supabase';
 import { useAuth } from '../../src/context/AuthContext';
 
@@ -36,11 +37,12 @@ export default function DashboardScreen() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [targetCalories, setTargetCalories] = useState<number | null>(null);
+  const macroTargets = targetCalories ? calculateMacroTargets(targetCalories) : null;
   const [dailyData, setDailyData] = useState<DailyData>({
     macros: {
-      carbs: { current: 0, target: 250 },
-      protein: { current: 0, target: 150 },
-      fat: { current: 0, target: 70 }
+      carbs: { current: 0, target: 0 },
+      protein: { current: 0, target: 0 },
+      fat: { current: 0, target: 0 }
     },
     meals: {
       breakfast: { name: 'Breakfast', calories: 0, icon: 'food-croissant' },
@@ -99,9 +101,18 @@ export default function DashboardScreen() {
       setDailyData(prev => ({
         ...prev,
         macros: {
-          carbs: { ...prev.macros.carbs, current: macros.carbs },
-          protein: { ...prev.macros.protein, current: macros.protein },
-          fat: { ...prev.macros.fat, current: macros.fat }
+          carbs: {
+            current: macros.carbs,
+            target: macroTargets?.carbs ?? prev.macros.carbs.target,
+          },
+          protein: {
+            current: macros.protein,
+            target: macroTargets?.protein ?? prev.macros.protein.target,
+          },
+          fat: {
+            current: macros.fat,
+            target: macroTargets?.fat ?? prev.macros.fat.target,
+          }
         },
         meals: {
           breakfast: { ...prev.meals.breakfast, calories: mealTotals.breakfast ?? 0 },
@@ -118,9 +129,18 @@ export default function DashboardScreen() {
       setDailyData(prev => ({
         ...prev,
         macros: {
-          carbs: { ...prev.macros.carbs, current: 0 },
-          protein: { ...prev.macros.protein, current: 0 },
-          fat: { ...prev.macros.fat, current: 0 }
+          carbs: {
+            current: 0,
+            target: macroTargets?.carbs ?? prev.macros.carbs.target,
+          },
+          protein: {
+            current: 0,
+            target: macroTargets?.protein ?? prev.macros.protein.target,
+          },
+          fat: {
+            current: 0,
+            target: macroTargets?.fat ?? prev.macros.fat.target,
+          }
         }
       }));
     } finally {
