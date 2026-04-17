@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Button, TextInput } from 'react-native-paper';
+import { Text, Button, TextInput, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTheme as useAppTheme } from '../../src/theme/useTheme';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
+  const paperTheme = useTheme();
+  const theme = useAppTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -28,31 +31,33 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
-          <Text variant="headlineMedium" style={styles.title}>Welcome to CalFit</Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>Log in to track your meals and progress</Text>
+          <Text variant="headlineMedium" style={[styles.title, { color: theme.text }]}>Welcome to CalFit</Text>
+          <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.subtext }]}>Log in to track your meals and progress</Text>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={[styles.error, { color: paperTheme.colors.error }]}>{error}</Text> : null}
 
           <TextInput
             label="Email"
             value={email}
             onChangeText={setEmail}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.card }]}
             keyboardType="email-address"
             autoCapitalize="none"
             disabled={loading}
+            textColor={theme.text}
           />
 
           <TextInput
             label="Password"
             value={password}
             onChangeText={setPassword}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.card }]}
             secureTextEntry
             disabled={loading}
+            textColor={theme.text}
           />
 
           <Button
@@ -82,7 +87,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   scrollContent: {
     flexGrow: 1,
@@ -101,7 +105,6 @@ const styles = StyleSheet.create({
   subtitle: {
     marginBottom: 32,
     textAlign: 'center',
-    color: '#666',
   },
   input: {
     marginBottom: 16,
@@ -110,7 +113,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   error: {
-    color: 'red',
     marginBottom: 16,
     textAlign: 'center',
   },
