@@ -1,10 +1,19 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, useColorScheme } from 'react-native';
 import { Text, useTheme, Searchbar } from 'react-native-paper';
 import { Stack, useLocalSearchParams } from 'expo-router';
 
 export default function AddMealScreen() {
   const theme = useTheme();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const colors = {
+    background: isDark ? '#121212' : '#ffffff',
+    text: isDark ? '#ffffff' : '#000000',
+    inputBg: isDark ? '#1e1e1e' : '#f5f5f5',
+    border: isDark ? '#333333' : '#dddddd',
+    placeholder: isDark ? '#888888' : '#999999',
+  };
   const { type } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -31,28 +40,28 @@ export default function AddMealScreen() {
           headerStyle: {
             backgroundColor: theme.colors.primary,
           },
-          headerTintColor: '#fff',
+          headerTintColor: colors.text,
         }}
       />
-      <View style={styles.container}>
-        <View style={styles.searchContainer}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.inputBg, borderBottomColor: colors.border }]}>
           <Searchbar
             placeholder="Search for food"
             onChangeText={setSearchQuery}
             value={searchQuery}
-            style={styles.searchBar}
+            style={[styles.searchBar, { backgroundColor: colors.inputBg, borderColor: colors.border }]}
             iconColor={theme.colors.primary}
-            inputStyle={styles.searchInput}
-            placeholderTextColor="#757575"
+            inputStyle={[styles.searchInput, { color: colors.text }]}
+            placeholderTextColor={colors.placeholder}
           />
         </View>
         <ScrollView style={styles.content}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recent</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent</Text>
             {/* Add recent meals list here */}
           </View>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Common Foods</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Common Foods</Text>
             {/* Add common foods list here */}
           </View>
         </ScrollView>
@@ -64,18 +73,16 @@ export default function AddMealScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
   },
   searchContainer: {
     padding: 16,
-    backgroundColor: '#1E1E1E',
+    borderBottomWidth: 1,
   },
   searchBar: {
-    backgroundColor: '#2C2C2C',
     elevation: 0,
+    borderWidth: 1,
   },
   searchInput: {
-    color: 'white',
   },
   content: {
     flex: 1,
@@ -84,7 +91,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionTitle: {
-    color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
