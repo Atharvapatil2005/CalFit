@@ -76,11 +76,16 @@ export default function MealsScreen() {
     const searchToken = Date.now();
     activeSearchTokenRef.current = searchToken;
 
+    setSearchResults([]);
+    setError('');
+
     try {
       setIsSearching(true);
-      setError('');
       const results = await searchFood(searchQuery);
       if (activeSearchTokenRef.current === searchToken) {
+        if (results.length === 0) {
+          setError('No foods found. Try a different search.');
+        }
         setSearchResults(results);
       }
     } catch (error) {
@@ -250,6 +255,11 @@ export default function MealsScreen() {
             <ActivityIndicator style={styles.loader} />
           ) : (
             <ScrollView style={styles.searchResults}>
+              {searchResults.length === 0 && !error ? (
+                <Text variant="bodyMedium" style={{ color: theme.subtext, textAlign: 'center', padding: 16 }}>
+                  Search for foods above
+                </Text>
+              ) : null}
               {searchResults.map((food, index) => {
                 console.log('[UI] RENDER FOOD ITEM:', food.food_name, 'cal:', food.calories);
                 return (
