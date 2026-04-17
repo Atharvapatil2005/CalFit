@@ -1,21 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Text, Card, List, Switch, Button, useTheme } from 'react-native-paper';
+import { Text, Card, List, Button, RadioButton, useTheme as usePaperTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
-import { useTheme as useAppTheme } from '../../src/theme/useTheme';
+import { useTheme } from '../../src/theme/useTheme';
+import { useThemeMode } from '../../src/theme/ThemeContext';
 
 export default function ProfileScreen() {
-  const paperTheme = useTheme();
-  const theme = useAppTheme();
+  const paperTheme = usePaperTheme();
+  const theme = useTheme();
+  const { themeMode, setThemeMode } = useThemeMode();
   const { user, signOut } = useAuth();
+  const [expanded, setExpanded] = useState(false);
 
   const handleSignOut = async () => {
     try {
       await signOut();
       router.replace('/(auth)/login');
     } catch (_error) {
-      // Keep the user on the current screen if sign-out fails.
+    }
+  };
+
+  const getThemeLabel = () => {
+    switch (themeMode) {
+      case 'light': return 'Light';
+      case 'dark': return 'Dark';
+      case 'system': return 'System';
     }
   };
 
@@ -31,20 +41,48 @@ export default function ProfileScreen() {
       <Card style={[styles.card, { backgroundColor: theme.card }]}>
         <Card.Content>
           <List.Section>
-            <List.Subheader style={{ color: theme.subtext }}>Settings</List.Subheader>
-            <List.Item
-              title="Dark Mode"
+            <List.Subheader style={{ color: theme.subtext }}>Appearance</List.Subheader>
+            <List.Accordion
+              title="Theme"
+              description={getThemeLabel()}
+              expanded={expanded}
+              onPress={() => setExpanded(!expanded)}
               titleStyle={{ color: theme.text }}
-              description="Toggle system theme"
               descriptionStyle={{ color: theme.subtext }}
-              right={() => (
-                <Switch
-                  value={false}
-                  onValueChange={() => {}}
-                  color={paperTheme.colors.primary}
-                />
-              )}
-            />
+              style={{ backgroundColor: theme.card }}
+            >
+              <View style={[styles.radioGroup, { backgroundColor: theme.background }]}>
+                <RadioButton.Group
+                  onValueChange={(value) => {
+                    setThemeMode(value as 'light' | 'dark' | 'system');
+                    setExpanded(false);
+                  }}
+                  value={themeMode}
+                >
+                  <RadioButton.Item
+                    label="Light"
+                    value="light"
+                    labelStyle={{ color: theme.text }}
+                    uncheckedColor={theme.subtext}
+                    style={styles.radioItem}
+                  />
+                  <RadioButton.Item
+                    label="Dark"
+                    value="dark"
+                    labelStyle={{ color: theme.text }}
+                    uncheckedColor={theme.subtext}
+                    style={styles.radioItem}
+                  />
+                  <RadioButton.Item
+                    label="System"
+                    value="system"
+                    labelStyle={{ color: theme.text }}
+                    uncheckedColor={theme.subtext}
+                    style={styles.radioItem}
+                  />
+                </RadioButton.Group>
+              </View>
+            </List.Accordion>
             <List.Item
               title="Units"
               titleStyle={{ color: theme.text }}
@@ -117,4 +155,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 32,
   },
-}); 
+  radioGroup: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  radioItem: {
+    paddingVertical: 4,
+  },
+});
