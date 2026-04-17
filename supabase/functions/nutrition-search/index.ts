@@ -5,52 +5,79 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  const nutritionixAppId = Deno.env.get('NUTRITIONIX_APP_ID');
-  const nutritionixAppKey = Deno.env.get('NUTRITIONIX_APP_KEY');
-
-  if (!nutritionixAppId || !nutritionixAppKey) {
-    return new Response(
-      JSON.stringify({ error: 'Missing Nutritionix secrets' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
-
   try {
     const { query } = await req.json();
 
-    const response = await fetch('https://trackapi.nutritionix.com/v2/natural/nutrients', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-app-id': nutritionixAppId,
-        'x-app-key': nutritionixAppKey,
-      },
-      body: JSON.stringify({ query }),
-    });
+    console.log('[NUTRITION SEARCH] Query:', query);
 
-    const rawBody = await response.text();
-    const contentType = response.headers.get('content-type') ?? '';
-    const isJson = contentType.includes('application/json');
-
-    let body: unknown;
-    if (isJson) {
-      try {
-        body = JSON.parse(rawBody);
-      } catch {
-        body = null;
-      }
+    if (!query || typeof query !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Query is required', foods: [] }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
-    return new Response(JSON.stringify(body ?? { error: rawBody || 'Upstream nutrition response was not valid JSON.' }), {
-      status: response.status,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const searchUrl = new URL('https://world.openfoodfacts.org/cgi/search.pl');
+    searchUrl.searchParams.set('search_terms', query);
+    searchUrl.searchParams.set('search_simple', '1');
+    searchUrl.searchParams.set('action', 'process');
+    searchUrl.searchParams.set('json', '1');
+    searchUrl.searchParams.set('page_size', '20');
+    searchUrl.searchParams.set('fields', 'product_name,nutriments,serving_size');
+
+    const response = await fetch(searchUrl.toString(), {
+      headers: {
+        'User-Agent': 'CalFit/1.0 (React Native App)',
+      },
     });
-  } catch (error) {
+
+    if (!response.ok) {
+      console.error('[NUTRITION SEARCH] Open Food Facts API error:', response.status);
+      return new Response(
+        JSON.stringify({ error: 'Food search service unavailable', foods: [] }),
+        {
+          status: 502,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const data = await response.json();
+
+    console.log('[NUTRITION SEARCH] Results count:', data.products?.length ?? 0);
+
+    const foods = (data.products || [])
+      .filter((product: any) => product.product_name)
+      .slice(0, 15)
+      .map((product: any) => {
+        const nutriments = product.nutriments || {};
+        
+        return {
+          food_name: product.product_name,
+          serving_qty: 1,
+          serving_unit: product.serving_size || 'serving',
+          serving_weight_grams: 100,
+          calories: Math.round(nutriments['energy-kcal_100g'] || nutriments['energy-kcal'] || 0),
+          protein: Math.round(nutriments.proteins_100g || nutriments.proteins || 0),
+          carbs: Math.round(nutriments.carbohydrates_100g || nutriments.carbohydrates || 0),
+          fats: Math.round(nutriments.fat_100g || nutriments.fat || 0),
+        };
+      });
+
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unexpected nutrition proxy error' }),
+      JSON.stringify({ foods }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  } catch (error) {
+    console.error('[NUTRITION SEARCH] Unexpected error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Food search failed', foods: [] }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
