@@ -1,5 +1,10 @@
 import { corsHeaders } from '../_shared/cors.ts';
 
+const safeNumber = (value: any): number => {
+  const num = Number(value);
+  return isNaN(num) ? 0 : num;
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -76,17 +81,20 @@ Deno.serve(async (req) => {
         food_name: item.product_name || 'Unknown food',
         serving_qty: 100,
         serving_unit: 'g',
-        calories: Math.round(nutriments['energy-kcal_100g'] || nutriments['energy-kcal'] || 0),
-        protein: Math.round(nutriments['proteins_100g'] || nutriments.proteins || 0),
-        carbs: Math.round(nutriments['carbohydrates_100g'] || nutriments.carbohydrates || 0),
-        fats: Math.round(nutriments['fat_100g'] || nutriments.fat || 0),
+        calories: Math.round(safeNumber(nutriments['energy-kcal_100g'])),
+        protein: Math.round(safeNumber(nutriments['proteins_100g'])),
+        carbs: Math.round(safeNumber(nutriments['carbohydrates_100g'])),
+        fats: Math.round(safeNumber(nutriments['fat_100g'])),
       };
 
       console.log('[NUTRITION SEARCH] Mapped food:', food.food_name, 'cal:', food.calories);
       return food;
     });
 
-    const cleanFoods = foods.filter(f => f.food_name !== 'Unknown food' && f.calories > 0);
+    const cleanFoods = foods.filter(f => 
+      f.food_name !== 'Unknown food' &&
+      f.calories > 0
+    );
 
     console.log('[NUTRITION SEARCH] Returning', cleanFoods.length, 'foods');
 
