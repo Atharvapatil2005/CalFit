@@ -15,6 +15,48 @@ const getCalories = (nutriments: any): number => {
   return 0;
 };
 
+const getFallbackFoods = (query: string) => {
+  const q = query.toLowerCase().trim();
+  
+  const commonFoods: Record<string, any> = {
+    chicken: { food_name: 'Chicken Breast', calories: 165, protein: 31, carbs: 0, fats: 4 },
+    rice: { food_name: 'White Rice', calories: 130, protein: 3, carbs: 28, fats: 0 },
+    egg: { food_name: 'Egg', calories: 78, protein: 6, carbs: 1, fats: 5 },
+    milk: { food_name: 'Milk', calories: 42, protein: 3, carbs: 5, fats: 1 },
+    bread: { food_name: 'Bread', calories: 265, protein: 9, carbs: 49, fats: 3 },
+    apple: { food_name: 'Apple', calories: 52, protein: 0, carbs: 14, fats: 0 },
+    banana: { food_name: 'Banana', calories: 89, protein: 1, carbs: 23, fats: 0 },
+    potato: { food_name: 'Potato', calories: 77, protein: 2, carbs: 17, fats: 0 },
+    pasta: { food_name: 'Pasta', calories: 131, protein: 5, carbs: 25, fats: 1 },
+    salmon: { food_name: 'Salmon', calories: 208, protein: 20, carbs: 0, fats: 13 },
+    beef: { food_name: 'Beef', calories: 250, protein: 26, carbs: 0, fats: 15 },
+    tofu: { food_name: 'Tofu', calories: 76, protein: 8, carbs: 2, fats: 4 },
+    broccoli: { food_name: 'Broccoli', calories: 34, protein: 3, carbs: 7, fats: 0 },
+    oatmeal: { food_name: 'Oatmeal', calories: 68, protein: 2, carbs: 12, fats: 1 },
+    yogurt: { food_name: 'Yogurt', calories: 59, protein: 10, carbs: 3, fats: 0 },
+  };
+
+  for (const [key, food] of Object.entries(commonFoods)) {
+    if (q.includes(key)) {
+      return [{
+        ...food,
+        serving_qty: 100,
+        serving_unit: 'g',
+      }];
+    }
+  }
+
+  return [{
+    food_name: query.trim(),
+    serving_qty: 100,
+    serving_unit: 'g',
+    calories: 100,
+    protein: 5,
+    carbs: 15,
+    fats: 3,
+  }];
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -38,7 +80,7 @@ Deno.serve(async (req) => {
     searchUrl.searchParams.set('search_simple', '1');
     searchUrl.searchParams.set('action', 'process');
     searchUrl.searchParams.set('json', '1');
-    searchUrl.searchParams.set('page_size', '30');
+    searchUrl.searchParams.set('page_size', '20');
     searchUrl.searchParams.set('fields', 'product_name,nutriments,serving_size');
 
     console.log('[EDGE] Fetching:', searchUrl.toString());
@@ -46,18 +88,32 @@ Deno.serve(async (req) => {
     const response = await fetch(searchUrl.toString(), {
       headers: {
         'User-Agent': 'CalFit/1.0 (React Native App)',
+        'Accept': 'application/json',
       },
     });
 
     const rawText = await response.text();
     console.log('[EDGE] Raw response length:', rawText.length);
+    console.log('[EDGE] Response starts with:', rawText.substring(0, 50));
+
+    if (rawText.trim().startsWith('<')) {
+      console.error('[EDGE] API returned HTML instead of JSON - likely rate limited or blocked');
+      console.log('[EDGE] Returning fallback foods');
+      const fallbackFoods = getFallbackFoods(query);
+      return new Response(JSON.stringify({ foods: fallbackFoods }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     let data;
     try {
       data = JSON.parse(rawText);
     } catch (e) {
       console.error('[EDGE] JSON parse failed:', e);
-      return new Response(JSON.stringify({ foods: [] }), {
+      console.log('[EDGE] Returning fallback foods due to parse error');
+      const fallbackFoods = getFallbackFoods(query);
+      return new Response(JSON.stringify({ foods: fallbackFoods }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -66,28 +122,16 @@ Deno.serve(async (req) => {
     const rawProductCount = data?.products?.length ?? 0;
     console.log('[EDGE] Raw products count:', rawProductCount);
 
-    if (rawProductCount > 0) {
-      console.log('[EDGE] Sample raw product:', JSON.stringify(data.products[0]).substring(0, 300));
-    }
-
     if (!data?.products || !Array.isArray(data.products) || rawProductCount === 0) {
       console.log('[EDGE] No products from API, returning fallback');
-      const fallbackFood = {
-        food_name: query.trim(),
-        serving_qty: 100,
-        serving_unit: 'g',
-        calories: 100,
-        protein: 5,
-        carbs: 15,
-        fats: 3,
-      };
-      return new Response(JSON.stringify({ foods: [fallbackFood] }), {
+      const fallbackFoods = getFallbackFoods(query);
+      return new Response(JSON.stringify({ foods: fallbackFoods }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const foods = data.products.slice(0, 30).map((item: any) => {
+    const foods = data.products.slice(0, 20).map((item: any) => {
       const nutriments = item?.nutriments || {};
 
       return {
@@ -101,36 +145,21 @@ Deno.serve(async (req) => {
       };
     });
 
-    const mappedCount = foods.length;
-    console.log('[EDGE] Mapped foods count:', mappedCount);
-
     const cleanFoods = foods.filter(f => 
       f.food_name && 
       f.food_name !== 'Unknown food'
     );
 
-    const filteredCount = cleanFoods.length;
-    console.log('[EDGE] After filtering:', filteredCount, 'foods');
+    console.log('[EDGE] Returning', cleanFoods.length, 'foods');
 
-    // If no valid foods after filtering, return generic fallback
     if (cleanFoods.length === 0) {
-      console.log('[EDGE] No valid foods, returning query as fallback');
-      const fallbackFood = {
-        food_name: query.trim(),
-        serving_qty: 100,
-        serving_unit: 'g',
-        calories: 100,
-        protein: 5,
-        carbs: 15,
-        fats: 3,
-      };
-      return new Response(JSON.stringify({ foods: [fallbackFood] }), {
+      console.log('[EDGE] No valid foods, returning fallback');
+      const fallbackFoods = getFallbackFoods(query);
+      return new Response(JSON.stringify({ foods: fallbackFoods }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    console.log('[EDGE] Returning', cleanFoods.length, 'foods');
 
     return new Response(JSON.stringify({ foods: cleanFoods }), {
       status: 200,
@@ -139,7 +168,8 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('[EDGE] Unexpected error:', error);
-    return new Response(JSON.stringify({ foods: [] }), {
+    const fallbackFoods = getFallbackFoods('food');
+    return new Response(JSON.stringify({ foods: fallbackFoods }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
