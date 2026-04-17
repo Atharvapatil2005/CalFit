@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { Text, Button, Portal, Modal, TextInput, List, useTheme, IconButton } from 'react-native-paper';
+import { Text, Button, Portal, Modal, TextInput, List, useTheme, IconButton, Surface } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { addMeal, getTodayMeals, deleteMeal, Meal } from '../../src/services/supabase';
 import { searchFood, FoodItem } from '../../src/services/nutritionService';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTheme as useAppTheme } from '../../src/theme/useTheme';
 
 export default function MealsScreen() {
-  const theme = useTheme();
+  const paperTheme = useTheme();
+  const theme = useAppTheme();
   const { user } = useAuth();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(false);
@@ -160,9 +162,9 @@ export default function MealsScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Text variant="headlineMedium">Today's Meals</Text>
+        <Text variant="headlineMedium" style={{ color: theme.text }}>Today's Meals</Text>
         <Button
           mode="contained"
           onPress={() => setIsModalVisible(true)}
@@ -172,26 +174,22 @@ export default function MealsScreen() {
         </Button>
       </View>
 
-      {error ? <Text style={[styles.error, { color: theme.colors.error }]}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { color: paperTheme.colors.error }]}>{error}</Text> : null}
 
       {loading ? (
-        <ActivityIndicator style={styles.loader} />
+        <ActivityIndicator style={styles.loader} color={paperTheme.colors.primary} />
       ) : (
         <ScrollView style={styles.mealsList}>
           {meals.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text variant="titleMedium">No meals logged yet</Text>
-              <Text variant="bodyMedium">Add your first meal to start tracking today's intake.</Text>
+              <Text variant="titleMedium" style={{ color: theme.text }}>No meals logged yet</Text>
+              <Text variant="bodyMedium" style={{ color: theme.subtext }}>Add your first meal to start tracking today's intake.</Text>
             </View>
           ) : null}
           {meals.map((meal) => (
-            <List.Item
-              key={meal.id}
-              title={meal.food_name}
-              description={`${meal.calories} kcal | P: ${meal.protein}g | C: ${meal.carbs}g | F: ${meal.fats}g`}
-              left={props => (
+            <Surface key={meal.id} style={[styles.mealItem, { backgroundColor: theme.card }]}>
+              <View style={styles.mealContent}>
                 <MaterialCommunityIcons
-                  {...props}
                   name={
                     meal.meal_type === 'breakfast' ? 'food-croissant' :
                     meal.meal_type === 'lunch' ? 'food' :
@@ -199,23 +197,19 @@ export default function MealsScreen() {
                     'food-apple'
                   }
                   size={24}
-                  color={theme.colors.primary}
+                  color={paperTheme.colors.primary}
                 />
-              )}
-              right={props => (
+                <View style={styles.mealTextContainer}>
+                  <Text variant="bodyLarge" style={{ color: theme.text }}>{meal.food_name}</Text>
+                  <Text variant="bodySmall" style={{ color: theme.subtext }}>{meal.calories} kcal | P: {meal.protein}g | C: {meal.carbs}g | F: {meal.fats}g</Text>
+                </View>
                 <IconButton
-                  {...props}
-                  icon={() => (
-                    <MaterialCommunityIcons
-                      name="delete"
-                      size={24}
-                      color={theme.colors.error}
-                    />
-                  )}
+                  icon="delete"
+                  iconColor={paperTheme.colors.error}
                   onPress={() => handleDeleteMeal(meal.id)}
                 />
-              )}
-            />
+              </View>
+            </Surface>
           ))}
         </ScrollView>
       )}
@@ -224,9 +218,9 @@ export default function MealsScreen() {
         <Modal
           visible={isModalVisible}
           onDismiss={() => setIsModalVisible(false)}
-          contentContainerStyle={styles.modalContent}
+          contentContainerStyle={[styles.modalContent, { backgroundColor: theme.card }]}
         >
-          <Text variant="headlineSmall" style={styles.modalTitle}>Add Meal</Text>
+          <Text variant="headlineSmall" style={[styles.modalTitle, { color: theme.text }]}>Add Meal</Text>
           <View style={styles.mealTypeContainer}>
             {renderMealTypeButton('breakfast', 'food-croissant')}
             {renderMealTypeButton('lunch', 'food')}
@@ -237,7 +231,7 @@ export default function MealsScreen() {
             label="Search for food"
             value={searchQuery}
             onChangeText={setSearchQuery}
-            style={styles.searchInput}
+            style={[styles.searchInput, { backgroundColor: theme.background }]}
             right={
               <TextInput.Icon
                 icon="magnify"
@@ -250,21 +244,19 @@ export default function MealsScreen() {
           ) : (
             <ScrollView style={styles.searchResults}>
               {searchResults.map((food) => (
-                <List.Item
-                  key={food.food_name}
-                  title={food.food_name}
-                  description={`${food.calories} kcal | P: ${food.protein}g | C: ${food.carbs}g | F: ${food.fats}g`}
-                  onPress={() => handleAddMeal(food)}
-                />
+                <Surface key={food.food_name} style={[styles.searchResultItem, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                  <Text variant="bodyLarge" style={{ color: theme.text }} onPress={() => handleAddMeal(food)}>{food.food_name}</Text>
+                  <Text variant="bodySmall" style={{ color: theme.subtext }}>{food.calories} kcal | P: {food.protein}g | C: {food.carbs}g | F: {food.fats}g</Text>
+                </Surface>
               ))}
             </ScrollView>
           )}
-          <Text variant="titleMedium" style={styles.manualSectionTitle}>Quick add manually</Text>
+          <Text variant="titleMedium" style={[styles.manualSectionTitle, { color: theme.text }]}>Quick add manually</Text>
           <TextInput
             label="Food name"
             value={manualFoodName}
             onChangeText={setManualFoodName}
-            style={styles.searchInput}
+            style={[styles.searchInput, { backgroundColor: theme.background }]}
           />
           <View style={styles.macroRow}>
             <TextInput
@@ -272,14 +264,14 @@ export default function MealsScreen() {
               value={manualCalories}
               onChangeText={setManualCalories}
               keyboardType="numeric"
-              style={styles.macroInput}
+              style={[styles.macroInput, { backgroundColor: theme.background }]}
             />
             <TextInput
               label="Protein"
               value={manualProtein}
               onChangeText={setManualProtein}
               keyboardType="numeric"
-              style={styles.macroInput}
+              style={[styles.macroInput, { backgroundColor: theme.background }]}
             />
           </View>
           <View style={styles.macroRow}>
@@ -288,14 +280,14 @@ export default function MealsScreen() {
               value={manualCarbs}
               onChangeText={setManualCarbs}
               keyboardType="numeric"
-              style={styles.macroInput}
+              style={[styles.macroInput, { backgroundColor: theme.background }]}
             />
             <TextInput
               label="Fats"
               value={manualFats}
               onChangeText={setManualFats}
               keyboardType="numeric"
-              style={styles.macroInput}
+              style={[styles.macroInput, { backgroundColor: theme.background }]}
             />
           </View>
           <Button
@@ -314,7 +306,6 @@ export default function MealsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -336,8 +327,21 @@ const styles = StyleSheet.create({
   loader: {
     marginTop: 32,
   },
+  mealItem: {
+    marginHorizontal: 16,
+    marginVertical: 4,
+    borderRadius: 8,
+    padding: 8,
+  },
+  mealContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  mealTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
   modalContent: {
-    backgroundColor: 'white',
     padding: 20,
     margin: 20,
     borderRadius: 8,
@@ -360,6 +364,12 @@ const styles = StyleSheet.create({
   },
   searchResults: {
     maxHeight: 300,
+  },
+  searchResultItem: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 8,
   },
   manualSectionTitle: {
     marginTop: 16,
