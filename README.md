@@ -155,6 +155,9 @@ eas build --platform android --profile production
 - EAS account linked to your Expo project
 
 ---
+Known Limitations:
+- Food search depends on Open Food Facts (data may vary)
+- AI uses free model (limited accuracy)
 
 ## License
 
