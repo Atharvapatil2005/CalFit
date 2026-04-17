@@ -9,10 +9,12 @@ import { theme } from '../src/constants/theme';
 import { AuthProvider } from '../src/context/AuthContext';
 import { useAuth } from '../src/context/AuthContext';
 import { OnboardingProvider } from '../src/context/OnboardingContext';
+import { useTheme as useAppTheme } from '../src/theme/useTheme';
 
 function AppNavigator() {
   const { session, loading } = useAuth();
   const segments = useSegments();
+  const theme = useAppTheme();
 
   useEffect(() => {
     if (loading) {
@@ -36,9 +38,9 @@ function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text variant="displayLarge" style={styles.title}>CalFit</Text>
-        <Text variant="titleLarge" style={styles.subtitle}>Loading...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <Text variant="displayLarge" style={[styles.title, { color: theme.text }]}>CalFit</Text>
+        <Text variant="titleLarge" style={[styles.subtitle, { color: theme.subtext }]}>Loading...</Text>
       </View>
     );
   }
@@ -113,19 +115,16 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: theme.colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
   },
   title: {
-    color: 'white',
     fontWeight: 'bold',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    color: 'white',
     opacity: 0.9,
     textAlign: 'center',
   },
