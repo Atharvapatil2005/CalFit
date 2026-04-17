@@ -230,116 +230,107 @@ export default function MealsScreen() {
         <Modal
           visible={isModalVisible}
           onDismiss={() => setIsModalVisible(false)}
-          contentContainerStyle={[styles.modalContent, { backgroundColor: theme.card }]}
+          contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.card }]}
         >
-          <ScrollView 
-            style={styles.modalScrollView}
-            contentContainerStyle={styles.modalScrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={true}
+          <Text variant="headlineSmall" style={[styles.modalTitle, { color: theme.text }]}>Add Meal</Text>
+          <View style={styles.mealTypeContainer}>
+            {renderMealTypeButton('breakfast', 'food-croissant')}
+            {renderMealTypeButton('lunch', 'food')}
+            {renderMealTypeButton('dinner', 'food-steak')}
+            {renderMealTypeButton('snack', 'food-apple')}
+          </View>
+          <TextInput
+            label="Search for food"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={[styles.searchInput, { backgroundColor: theme.background }]}
+            right={
+              <TextInput.Icon
+                icon="magnify"
+                onPress={handleSearch}
+              />
+            }
+          />
+          <View style={styles.searchResultsContainer}>
+            {isSearching ? (
+              <ActivityIndicator style={styles.loader} />
+            ) : searchResults.length === 0 && !error ? (
+              <Text variant="bodyMedium" style={{ color: theme.subtext, textAlign: 'center', padding: 16 }}>
+                Search for foods above
+              </Text>
+            ) : error ? (
+              <Text variant="bodyMedium" style={{ color: paperTheme.colors.error, textAlign: 'center', padding: 16 }}>
+                {error}
+              </Text>
+            ) : (
+              <ScrollView 
+                style={styles.searchResultsScroll}
+                nestedScrollEnabled={true}
+                showsVerticalScrollIndicator={true}
+              >
+                {searchResults.map((food, index) => {
+                  console.log('[UI] RENDER FOOD ITEM:', food.food_name, 'cal:', food.calories);
+                  return (
+                    <Surface 
+                      key={`${food.food_name}-${index}`} 
+                      style={[styles.searchResultItem, { backgroundColor: theme.background, borderColor: theme.border }]}
+                    >
+                      <Text variant="bodyLarge" style={{ color: theme.text }} onPress={() => handleAddMeal(food)}>{food.food_name}</Text>
+                      <Text variant="bodySmall" style={{ color: theme.subtext }}>
+                        {safe(food.calories)} kcal | P: {safe(food.protein)}g | C: {safe(food.carbs)}g | F: {safe(food.fats)}g
+                      </Text>
+                    </Surface>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </View>
+          <Text variant="titleMedium" style={[styles.manualSectionTitle, { color: theme.text }]}>Quick add manually</Text>
+          <TextInput
+            label="Food name"
+            value={manualFoodName}
+            onChangeText={setManualFoodName}
+            style={[styles.searchInput, { backgroundColor: theme.background }]}
+          />
+          <View style={styles.macroRow}>
+            <TextInput
+              label="Calories"
+              value={manualCalories}
+              onChangeText={setManualCalories}
+              keyboardType="numeric"
+              style={[styles.macroInput, { backgroundColor: theme.background }]}
+            />
+            <TextInput
+              label="Protein"
+              value={manualProtein}
+              onChangeText={setManualProtein}
+              keyboardType="numeric"
+              style={[styles.macroInput, { backgroundColor: theme.background }]}
+            />
+          </View>
+          <View style={styles.macroRow}>
+            <TextInput
+              label="Carbs"
+              value={manualCarbs}
+              onChangeText={setManualCarbs}
+              keyboardType="numeric"
+              style={[styles.macroInput, { backgroundColor: theme.background }]}
+            />
+            <TextInput
+              label="Fats"
+              value={manualFats}
+              onChangeText={setManualFats}
+              keyboardType="numeric"
+              style={[styles.macroInput, { backgroundColor: theme.background }]}
+            />
+          </View>
+          <Button
+            mode="contained"
+            onPress={handleManualAddMeal}
+            disabled={!manualFoodName.trim()}
           >
-            <Text variant="headlineSmall" style={[styles.modalTitle, { color: theme.text }]}>Add Meal</Text>
-            <View style={styles.mealTypeContainer}>
-              {renderMealTypeButton('breakfast', 'food-croissant')}
-              {renderMealTypeButton('lunch', 'food')}
-              {renderMealTypeButton('dinner', 'food-steak')}
-              {renderMealTypeButton('snack', 'food-apple')}
-            </View>
-            <TextInput
-              label="Search for food"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              style={[styles.searchInput, { backgroundColor: theme.background }]}
-              right={
-                <TextInput.Icon
-                  icon="magnify"
-                  onPress={handleSearch}
-                />
-              }
-            />
-            <View style={styles.searchResultsContainer}>
-              {isSearching ? (
-                <ActivityIndicator style={styles.loader} />
-              ) : (
-                <ScrollView 
-                  style={styles.searchResultsScroll}
-                  nestedScrollEnabled={true}
-                  showsVerticalScrollIndicator={true}
-                >
-                  {searchResults.length === 0 && !error ? (
-                    <Text variant="bodyMedium" style={{ color: theme.subtext, textAlign: 'center', padding: 16 }}>
-                      Search for foods above
-                    </Text>
-                  ) : error ? (
-                    <Text variant="bodyMedium" style={{ color: paperTheme.colors.error, textAlign: 'center', padding: 16 }}>
-                      {error}
-                    </Text>
-                  ) : (
-                    searchResults.map((food, index) => {
-                      console.log('[UI] RENDER FOOD ITEM:', food.food_name, 'cal:', food.calories);
-                      return (
-                        <Surface 
-                          key={`${food.food_name}-${index}`} 
-                          style={[styles.searchResultItem, { backgroundColor: theme.background, borderColor: theme.border }]}
-                        >
-                          <Text variant="bodyLarge" style={{ color: theme.text }} onPress={() => handleAddMeal(food)}>{food.food_name}</Text>
-                          <Text variant="bodySmall" style={{ color: theme.subtext }}>
-                            {safe(food.calories)} kcal | P: {safe(food.protein)}g | C: {safe(food.carbs)}g | F: {safe(food.fats)}g
-                          </Text>
-                        </Surface>
-                      );
-                    })
-                  )}
-                </ScrollView>
-              )}
-            </View>
-            <Text variant="titleMedium" style={[styles.manualSectionTitle, { color: theme.text }]}>Quick add manually</Text>
-            <TextInput
-              label="Food name"
-              value={manualFoodName}
-              onChangeText={setManualFoodName}
-              style={[styles.searchInput, { backgroundColor: theme.background }]}
-            />
-            <View style={styles.macroRow}>
-              <TextInput
-                label="Calories"
-                value={manualCalories}
-                onChangeText={setManualCalories}
-                keyboardType="numeric"
-                style={[styles.macroInput, { backgroundColor: theme.background }]}
-              />
-              <TextInput
-                label="Protein"
-                value={manualProtein}
-                onChangeText={setManualProtein}
-                keyboardType="numeric"
-                style={[styles.macroInput, { backgroundColor: theme.background }]}
-              />
-            </View>
-            <View style={styles.macroRow}>
-              <TextInput
-                label="Carbs"
-                value={manualCarbs}
-                onChangeText={setManualCarbs}
-                keyboardType="numeric"
-                style={[styles.macroInput, { backgroundColor: theme.background }]}
-              />
-              <TextInput
-                label="Fats"
-                value={manualFats}
-                onChangeText={setManualFats}
-                keyboardType="numeric"
-                style={[styles.macroInput, { backgroundColor: theme.background }]}
-              />
-            </View>
-            <Button
-              mode="contained"
-              onPress={handleManualAddMeal}
-              disabled={!manualFoodName.trim()}
-            >
-              Save Meal
-            </Button>
-          </ScrollView>
+            Save Meal
+          </Button>
         </Modal>
       </Portal>
     </View>
@@ -384,16 +375,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
-  modalContent: {
+  modalContainer: {
     margin: 20,
     borderRadius: 16,
-  },
-  modalScrollView: {
-    flex: 1,
-  },
-  modalScrollContent: {
     padding: 20,
-    paddingBottom: 40,
+    maxHeight: '85%',
   },
   modalTitle: {
     marginBottom: 16,
