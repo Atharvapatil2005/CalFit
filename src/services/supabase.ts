@@ -22,19 +22,21 @@ export type MealInsert = Omit<Meal, 'id' | 'created_at'>;
 export type UserProfileInsert = {
   id: string;
   email: string;
-  full_name?: string | null;
   gender?: 'male' | 'female' | null;
   age?: number | null;
   height?: number | null;
   weight?: number | null;
-  health_goal?: 'lose_weight' | 'maintain_weight' | 'gain_weight' | null;
-  additional_goals?: string[] | null;
-  dietary_preference?: 'none' | 'vegetarian' | 'vegan' | 'pescatarian' | null;
-  dietary_restrictions?: string[] | null;
+  activity_level?: 'sedentary' | 'light' | 'moderate' | 'active' | null;
+  goal?: 'lose_weight' | 'maintain_weight' | 'gain_weight' | null;
   target_calories?: number | null;
 };
 
 export type UserProfile = UserProfileInsert & {
+  full_name?: string | null;
+  additional_goals?: string[] | null;
+  dietary_preference?: 'none' | 'vegetarian' | 'vegan' | 'pescatarian' | null;
+  dietary_restrictions?: string[] | null;
+  health_goal?: 'lose_weight' | 'maintain_weight' | 'gain_weight' | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -43,6 +45,17 @@ const PROFILE_WRITE_SESSION_ERROR =
   'Your account was created, but your authenticated session was not ready to save your profile. Please sign in again to finish setup.';
 
 const buildProfileWriteError = (error: { code?: string; message: string }) => {
+  if (
+    error.code === 'PGRST204' ||
+    error.message.includes('target_calories') ||
+    error.message.includes('activity_level') ||
+    error.message.includes('goal')
+  ) {
+    return new Error(
+      'Profile save failed because the database schema does not match the app payload. Apply the latest profiles migration for `activity_level`, `goal`, and `target_calories` before registering users.'
+    );
+  }
+
   if (error.code === '42501') {
     return new Error(
       'Profile save was blocked by Supabase RLS. Confirm the `profiles` INSERT policy allows `auth.uid() = id`.'
@@ -109,13 +122,25 @@ export const upsertProfile = async (
 ) => {
   await ensureProfileWriteSession(profile.id, session);
 
+  console.log('[PROFILE UPSERT PAYLOAD]', profile);
+
   const { data, error } = await supabase
     .from('profiles')
     .upsert(profile, { onConflict: 'id' })
     .select()
     .single();
 
-  if (error) throw buildProfileWriteError(error);
+  if (error) {
+    console.log('[UPSERT ERROR]', {
+      code: error.code,
+      message: error.message,
+      details: 'details' in error ? error.details : undefined,
+      hint: 'hint' in error ? error.hint : undefined,
+    });
+    throw buildProfileWriteError(error);
+  }
+
+  console.log('[UPSERT RESULT]', data);
   return data;
 };
 
