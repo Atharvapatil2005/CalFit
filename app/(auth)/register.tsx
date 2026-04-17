@@ -7,6 +7,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useOnboarding } from '../../src/context/OnboardingContext';
 import { theme } from '../../src/constants/theme';
 import { calculateCalories } from '../../src/lib/calorieCalculator';
+import { supabase } from '../../src/lib/supabase';
 import { upsertProfile } from '../../src/services/supabase';
 
 export default function RegisterScreen() {
@@ -124,11 +125,12 @@ export default function RegisterScreen() {
         gender: state.gender,
       };
 
-      const { user, session } = await signUp(email.trim(), password, metadata);
+      const { session } = await signUp(email.trim(), password, metadata);
 
-      if (!user) {
-        throw new Error('We could not create your account.');
-      }
+      console.log('[register] signup result', {
+        sessionUserId: session?.user?.id ?? null,
+        hasAccessToken: Boolean(session?.access_token),
+      });
 
       if (!session) {
         throw new Error(
@@ -136,22 +138,41 @@ export default function RegisterScreen() {
         );
       }
 
+      const {
+        data: { user },
+        error: authUserError,
+      } = await supabase.auth.getUser();
+
+      if (authUserError) {
+        throw authUserError;
+      }
+
+      if (!user) {
+        throw new Error('Authenticated user was null after signup. Profile could not be created.');
+      }
+
+      const profilePayload = {
+        id: user.id,
+        email: user.email ?? email.trim(),
+        gender,
+        age,
+        height,
+        weight,
+        activity_level: activityLevel,
+        goal,
+        target_calories: targetCalories,
+      };
+
+      console.log('[AUTH UID]', user.id);
+      console.log('[PAYLOAD ID]', profilePayload.id);
+      console.log('[PROFILE UPSERT PAYLOAD]', profilePayload);
+
       const profile = await upsertProfile(
-        {
-          id: user.id,
-          email: user.email ?? email.trim(),
-          gender,
-          age,
-          height,
-          weight,
-          health_goal: goal,
-          additional_goals: state.additionalGoals,
-          dietary_preference: state.preference,
-          dietary_restrictions: state.restrictions,
-          target_calories: targetCalories,
-        },
+        profilePayload,
         session
       );
+
+      console.log('[UPSERT RESULT]', profile);
 
       const savedTargetCalories = profile?.target_calories ?? targetCalories;
 
@@ -160,6 +181,11 @@ export default function RegisterScreen() {
       resetState();
       router.replace('/(tabs)/dashboard');
     } catch (signupError) {
+      console.log('[UPSERT ERROR]', signupError);
+      Alert.alert(
+        'Profile save failed',
+        signupError instanceof Error ? signupError.message : 'Unable to create your profile row.'
+      );
       setError(signupError instanceof Error ? signupError.message : 'Unable to create your account.');
       setInfo('');
     } finally {
