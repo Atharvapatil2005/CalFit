@@ -9,7 +9,7 @@ AI-powered calorie tracking and nutrition monitoring for iOS and Android.
 ### Android APK
 Install the latest preview build directly on your Android device:
 
-[Download CalFit APK](https://expo.dev/accounts/atharvapatil/projects/calfit/builds/e7cd4b98-7ddd-4a6e-b1d6-9d42ff7097d3)
+[Download CalFit APK](https://expo.dev/artifacts/eas/s2G34pAaMs1dZyRp1WSjK8.apk)
 
 ---
 ##  Version History
