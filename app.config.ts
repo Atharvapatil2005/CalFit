@@ -16,7 +16,7 @@ export default function appConfig() {
   return {
     name: 'CalFit',
     slug: 'calfit',
-    version: '1.0.0',
+    version: '1.0.1',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
 
