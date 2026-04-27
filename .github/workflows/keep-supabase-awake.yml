@@ -2,7 +2,6 @@ name: Keep Supabase Awake
 
 on:
   schedule:
-    # Monday + Thursday at 9:00 UTC
     - cron: "0 9 * * 1,4"
   workflow_dispatch:
 
@@ -11,13 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Ping Supabase health endpoint
+      - name: Ping Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           echo "Pinging Supabase..."
 
+          echo "URL is: $SUPABASE_URL"
+
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -L "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}")
+            -L "$SUPABASE_URL/auth/v1/health" \
+            -H "apikey: $SUPABASE_ANON_KEY")
 
           echo "HTTP Status: $STATUS"
 
@@ -26,6 +30,3 @@ jobs:
           else
             echo "⚠️ Ping failed (status: $STATUS)"
           fi
-          - name: Debug URL
-  run: |
-    echo "URL is: ${{ secrets.SUPABASE_URL }}"
