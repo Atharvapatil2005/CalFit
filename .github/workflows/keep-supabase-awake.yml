@@ -13,6 +13,16 @@ jobs:
     steps:
       - name: Ping Supabase health endpoint
         run: |
-          curl -L -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/meals?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+          echo "Pinging Supabase..."
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -L "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}")
+
+          echo "HTTP Status: $STATUS"
+
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✅ Supabase is awake"
+          else
+            echo "⚠️ Ping failed (status: $STATUS)"
+          fi
