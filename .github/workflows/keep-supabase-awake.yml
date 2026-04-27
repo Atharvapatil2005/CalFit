@@ -26,3 +26,6 @@ jobs:
           else
             echo "⚠️ Ping failed (status: $STATUS)"
           fi
+          - name: Debug URL
+  run: |
+    echo "URL is: ${{ secrets.SUPABASE_URL }}"
