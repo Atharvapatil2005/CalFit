@@ -17,16 +17,24 @@ jobs:
         run: |
           echo "Pinging Supabase..."
 
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "❌ Error: SUPABASE_URL secret is not set"
+            exit 1
+          fi
+
           echo "URL is: $SUPABASE_URL"
 
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -L "$SUPABASE_URL/auth/v1/health" \
-            -H "apikey: $SUPABASE_ANON_KEY")
+            -H "apikey: $SUPABASE_ANON_KEY" || echo "0")
 
           echo "HTTP Status: $STATUS"
 
           if [ "$STATUS" -eq 200 ]; then
             echo "✅ Supabase is awake"
+          elif [ "$STATUS" -eq 0 ]; then
+            echo "❌ Curl failed - check URL and network connectivity"
+            exit 1
           else
             echo "⚠️ Ping failed (status: $STATUS)"
           fi
