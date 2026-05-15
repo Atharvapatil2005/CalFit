@@ -12,29 +12,29 @@ jobs:
     steps:
       - name: Ping Supabase
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          RAW_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           echo "Pinging Supabase..."
 
+          SUPABASE_URL=$(echo "$RAW_SUPABASE_URL" | tr -d '[:space:]')
+
           if [ -z "$SUPABASE_URL" ]; then
-            echo "❌ Error: SUPABASE_URL secret is not set"
+            echo "❌ Error: SUPABASE_URL secret is empty"
             exit 1
           fi
 
-          echo "URL is: $SUPABASE_URL"
+          echo "Sanitized URL received"
 
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -L "$SUPABASE_URL/auth/v1/health" \
-            -H "apikey: $SUPABASE_ANON_KEY" || echo "0")
+            -H "apikey: $SUPABASE_ANON_KEY")
 
           echo "HTTP Status: $STATUS"
 
-          if [ "$STATUS" -eq 200 ]; then
+          if [ "$STATUS" = "200" ]; then
             echo "✅ Supabase is awake"
-          elif [ "$STATUS" -eq 0 ]; then
-            echo "❌ Curl failed - check URL and network connectivity"
-            exit 1
           else
-            echo "⚠️ Ping failed (status: $STATUS)"
+            echo "⚠️ Ping failed"
+            exit 1
           fi
