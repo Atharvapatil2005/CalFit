@@ -1,8 +1,6 @@
 name: Keep Supabase Awake
 
 on:
-  schedule:
-    - cron: "0 9 * * 1,4"
   workflow_dispatch:
 
 jobs:
@@ -10,31 +8,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Ping Supabase
+      - name: Test direct Supabase URL
         env:
-          RAW_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          echo "Pinging Supabase..."
-
-          SUPABASE_URL=$(echo "$RAW_SUPABASE_URL" | tr -d '[:space:]')
-
-          if [ -z "$SUPABASE_URL" ]; then
-            echo "❌ Error: SUPABASE_URL secret is empty"
-            exit 1
-          fi
-
-          echo "Sanitized URL received"
+          echo "Testing direct URL..."
 
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -L "$SUPABASE_URL/auth/v1/health" \
+            -L "https://gljezekdozcgoplwtkex.supabase.co/auth/v1/health" \
             -H "apikey: $SUPABASE_ANON_KEY")
 
           echo "HTTP Status: $STATUS"
 
           if [ "$STATUS" = "200" ]; then
-            echo "✅ Supabase is awake"
+            echo "✅ Success"
           else
-            echo "⚠️ Ping failed"
+            echo "❌ Failed"
             exit 1
           fi
