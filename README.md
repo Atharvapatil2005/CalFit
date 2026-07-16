@@ -1,4 +1,3 @@
-
 # CalFit
 
 AI-powered calorie tracking and nutrition monitoring for iOS and Android.
