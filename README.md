@@ -160,5 +160,4 @@ Known Limitations:
 - AI uses free model (limited accuracy)
 
 ## License
-
 MIT License - see [LICENSE](LICENSE) for details.
